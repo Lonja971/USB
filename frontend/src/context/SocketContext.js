@@ -17,10 +17,6 @@ export const SocketProvider = ({ children, playerId }) => {
             },
          });
 
-         socketRef.current.on('connect', () => {
-            console.log('Socket connected:', socketRef.current);
-         });
-
          setSocket(socketRef.current);
 
          return () => {

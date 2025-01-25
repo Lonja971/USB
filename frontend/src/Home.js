@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useSocket } from "./socket/SocketContext";
+import { useSocket } from "./context/SocketContext";
 
 export function Home({ navigateTo, playerId }) {
 
