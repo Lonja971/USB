@@ -10,28 +10,26 @@ export function Router({ playerId }) {
    const [currentScreen, setCurrentScreen] = useState('home');
  
    const handleSendId = () => {
-     if (socket) {
-      const playerId = "iddi"
-      socket.emit('sendId', (playerId))
-     } else {
-       console.error('Socket not initialized yet!');
-     }
+      if (socket) {
+         const playerId = "iddi"
+         socket.emit('sendId', (playerId))
+      }
    };
- 
+
    const pages = {
-     home: <Home navigateTo={navigateTo} playerId={playerId} />,
-     battle: <Battle navigateTo={navigateTo} />,
-     mapTest: <MapTest />,
+      home: <Home navigateTo={navigateTo} playerId={playerId} />,
+      battle: <Battle navigateTo={navigateTo} />,
+      mapTest: <MapTest />,
    };
- 
+
    function navigateTo(screen) {
-     setCurrentScreen(pages[screen] ? screen : 'home');
+      setCurrentScreen(pages[screen] ? screen : 'home');
    }
  
    return (
-     <>
-       <button onClick={handleSendId}>Це</button>
-       {pages[currentScreen]}
-     </>
+      <>
+         <button onClick={handleSendId}>Це</button>
+         {pages[currentScreen]}
+      </>
    );
  }
