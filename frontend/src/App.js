@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 
-import { Router } from './Router.js';
-import { SocketProvider } from './context/SocketContext.js';
-import { PlayerDataProvider } from './context/PlayerDataContext.js';
+import { RouteProvider } from './context/RouteContext.js';
+import { AppProviders } from "./context/AppProviders.js";
 
 function App() {
    const [playerId, setPlayerId] = useState();
@@ -21,11 +20,9 @@ function App() {
    return (
       <>
          {playerId ? (
-            <SocketProvider playerId={playerId}>
-               <PlayerDataProvider playerId={playerId}>
-                  {<Router/>}
-               </PlayerDataProvider>
-            </SocketProvider>
+            <AppProviders playerId={playerId}>
+               <RouteProvider />
+            </AppProviders>
          ) : ""}
       </>
    );

@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useSocket } from "./context/SocketContext";
+import { useRoute } from "./context/RouteContext";
 
-export function Home({ navigateTo, playerId }) {
-
+export function Home({ screenProps }) {
+   const { navigateToScreen } = useRoute();
    const socket = useSocket();
 
    useEffect(() => {
@@ -35,6 +36,10 @@ export function Home({ navigateTo, playerId }) {
       socket.emit('sendId', (playerId))
    }
 
+   const handleChangeCurrentScreen = (screen) => {
+      navigateToScreen(screen, { text: "LOL" });
+   };
+
    return (
       <>
          <div>
@@ -42,7 +47,7 @@ export function Home({ navigateTo, playerId }) {
             <button onClick={handleSendId}>Start</button>
             <br />
             <button
-               onClick={() => navigateTo("battle")}
+               onClick={() => handleChangeCurrentScreen("battle")}
             >
                Go to the battle
             </button>
