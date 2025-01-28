@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { Home } from "../Home.js";
 import { Battle } from "../components/battle/battle.jsx";
 import { MapTest } from "../MapTest.js";
-import { LoadingScreen } from "../components/uikit/loading-screen.jsx";
+import { MainLoadingScreen } from "../MainLoadingScreen.js";
 
 const RouteContext = createContext(null);
 
@@ -11,10 +11,10 @@ export const useRoute = () => useContext(RouteContext);
 
 export const RouteProvider = ({ children }) => {
    const [screenProps, setScreenProps] = useState(null);
-   const [currentScreenName, setCurrentScreenName] = useState('home');
+   const [currentScreenName, setCurrentScreenName] = useState('mainLoadingScreen');
 
    const pages = {
-      loadingScreen: (props) => <LoadingScreen {...props} />,
+      mainLoadingScreen: (props) => <MainLoadingScreen {...props} />,
       home: (props) => <Home {...props} />,
       battle: (props) => <Battle {...props} />,
       mapTest: (props) => <MapTest {...props} />,
@@ -27,7 +27,7 @@ export const RouteProvider = ({ children }) => {
 
    const CurrentScreen = pages[currentScreenName]
       ? pages[currentScreenName]
-      : pages.loadingScreen;
+      : pages.mainLoadingScreen;
 
    return (
       <RouteContext.Provider value={{ navigateToScreen, currentScreenName }}>
