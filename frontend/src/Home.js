@@ -1,10 +1,18 @@
 import { useEffect } from "react";
 import { useSocket } from "./context/SocketContext";
 import { useRoute } from "./context/RouteContext";
+import { usePlayerData } from "./context/PlayerDataContext";
 
-export function Home({ screenProps }) {
+export function Home() {
+   const { playerData } = usePlayerData();
    const { navigateToScreen } = useRoute();
    const socket = useSocket();
+
+   useEffect(() => {
+      if (!playerData?.id) {
+         navigateToScreen("mainLoadingScreen");
+      }
+   }, [playerData, navigateToScreen])
 
    useEffect(() => {
       if (!socket) return;
@@ -44,6 +52,9 @@ export function Home({ screenProps }) {
       <>
          <div>
             <h1>HOME page</h1>
+            { playerData?.data ? (
+               <div>Player name: {playerData.data.name}</div>
+            ) : ""}
             <button onClick={handleSendId}>Start</button>
             <br />
             <button

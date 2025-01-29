@@ -30,7 +30,7 @@ io.on('connection', (socket) => {
    console.log(`A user connected: ${socket.id} | ${backendPlayerId}`);
 
    if (backendPlayers[backendPlayerId]){
-      socket.emit('playerAlreadyPlaying', `Гравець з ніком "${backendPlayers[backendPlayerId].name}" вже грає зараз. Спробуйте зайти ще раз пізніше.`)
+      socket.emit('disconnectReason', `Гравець з ніком "${backendPlayers[backendPlayerId].name}" вже грає зараз. Спробуйте зайти ще раз пізніше.`)
       socket.disconnect(true);
       console.log(`Гравець з ${socket.id} відключений.`)
    }else{
@@ -38,7 +38,10 @@ io.on('connection', (socket) => {
          socketId: socket.id,
          name: `${backendPlayerId} name`
       };
-      socket.emit('playerData', {name: backendPlayers[backendPlayerId].name});
+      function greeting() {
+         socket.emit('playerData', {name: backendPlayers[backendPlayerId].name});
+      }
+      setTimeout(greeting, 5000);
    }
 
    io.emit('updatePlayers', backendPlayers)

@@ -8,9 +8,11 @@ export const PlayerDataProvider = ({ children, playerId }) => {
    const [playerData, setPlayerData] = useState({
       id: playerId
    });
+   const [isMainLoadingScreen, setIsMainLoadingScreen] = useState(true);
+   const [mainLoadingScreenMessage, setMainLoadingScreenMessage] = useState(null);
 
    return (
-      <PlayerContext.Provider value={{ playerData, setPlayerData }}>
+      <PlayerContext.Provider value={{ playerData, setPlayerData, mainLoadingScreenMessage, setIsMainLoadingScreen, isMainLoadingScreen, setMainLoadingScreenMessage }}>
          {children}
       </PlayerContext.Provider>
    );

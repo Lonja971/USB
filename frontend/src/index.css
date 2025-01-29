@@ -62,15 +62,16 @@ code {
   box-sizing: border-box;
   width: 48px;
   height: 48px;
-  border-radius: 50%;
-  border: 2px solid #000000;
+  border: 4px solid #FF3D00;
   position: absolute;
   left: 0;
   top: 0;
-  animation: animloader 2s linear infinite;
+  animation: animloader 2s ease-in-out infinite;
 }
 .loader::after {
+  border-color: #FF3D00;
   animation-delay: 1s;
+  opacity: 0;
 }
 
 @keyframes animloader {
@@ -83,3 +84,4 @@ code {
     opacity: 0;
   }
 }
+    
