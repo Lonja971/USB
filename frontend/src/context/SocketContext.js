@@ -32,7 +32,7 @@ export const SocketProvider = ({ children, playerId }) => {
    useEffect(() => {
       if (!socket) return;
          socket.on("connect_error", (err) => {
-            setMainLoadingScreenMessage("Сервер не відповідає");
+            setMainLoadingScreenMessage(`Сервер не відповідає ${err}`);
             setIsMainLoadingScreen(true);
          });
          socket.on("disconnectReason", (data) => {
@@ -47,6 +47,7 @@ export const SocketProvider = ({ children, playerId }) => {
          socket.off("playerAlreadyPlaying");
          socket.off("disconnect");
          socket.off("connect_error");
+         socket.off("playersNumber");
       };
    }, [socket, setIsMainLoadingScreen, setMainLoadingScreenMessage, setConnectionInfo]);
 

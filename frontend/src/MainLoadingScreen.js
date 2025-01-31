@@ -4,6 +4,7 @@ import { useSocket } from "./context/SocketContext";
 import "./css/loading_screen.css"
 import { usePlayerData } from "./context/PlayerDataContext";
 import { useAppData } from "./context/AppData";
+import { MainLoadingLayout } from "./components/uikit/main-loading-layout";
 
 export function MainLoadingScreen(){
    const { navigateToScreen, setIsMainLoadingScreen } = useRoute();
@@ -19,7 +20,7 @@ export function MainLoadingScreen(){
                ...prevPlayerData,
                data: data,
             }));
-            navigateToScreen("home");
+            navigateToScreen();
             setIsMainLoadingScreen(false);
          });
       return () => {
@@ -28,23 +29,6 @@ export function MainLoadingScreen(){
    }, [socket, navigateToScreen, setPlayerData, setIsMainLoadingScreen]);
 
    return(
-      <div className="loading__container">
-         <div className="">Ultimate Sea Battle</div>
-         <div className="loading__content">
-            <div className="loading__message">
-               {mainLoadingScreenMessage ?
-                  <p>{mainLoadingScreenMessage}</p>
-                  : ""
-               }
-               {connectionInfo ?
-                  <p>{connectionInfo}</p>
-                  : ""
-               }
-            </div>
-            <div className="loading__content-loader">
-               <div className="loader"></div>
-            </div>
-         </div>
-      </div>
+      <MainLoadingLayout connectionInfo={connectionInfo} mainLoadingScreenMessage={mainLoadingScreenMessage}/>
    )
 }

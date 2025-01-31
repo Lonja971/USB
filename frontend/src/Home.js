@@ -1,12 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "./context/SocketContext";
 import { useRoute } from "./context/RouteContext";
 import { usePlayerData } from "./context/PlayerDataContext";
+
+import { BattleWaitingPopup } from "./components/BattleWaitingPopup";
 
 export function Home() {
    const { playerData } = usePlayerData();
    const { navigateToScreen } = useRoute();
    const socket = useSocket();
+   
+   const [playersNumber, setPlayersNumber] = useState();
+   const [isInBattleQueue, setIsInBattleQueue] = useState(false);
 
    useEffect(() => {
       if (!playerData?.id) {
@@ -17,52 +22,46 @@ export function Home() {
    useEffect(() => {
       if (!socket) return;
 
-      socket.on("connect", () => {
-         console.log("Connected to server with socket ID:", socket.id);
-      });
       socket.on("updatePlayers", (data) => {
          console.log(`Гравці:`)
          console.log(data)
       })
-      socket.on("helloYou", (data) => {
-         console.log(`Саме тобі передається ${data}!`)
+      socket.on("isInBattleQueue", (data) => {
+         setIsInBattleQueue(data.status);
       })
-      socket.on("helloAll", (data) => {
-         console.log(`Всім передається ${data}!`)
-      })
+      socket.on("playersNumber", (number) => {
+         setPlayersNumber(number)
+      });
 
       return () => {
-         socket.off("connect");
          socket.off("updatePlayers");
-         socket.off("helloYou");
-         socket.off("helloAll");
+         socket.off("isInBattleQueue");
+         socket.off("playersNumber");
       };
    }, [socket]);
 
-   const handleSendId = () => {
-      const playerId = "iddi"
-      socket.emit('sendId', (playerId))
+   const handleGoToTheBattle = (isInTurn) => {
+      socket.emit('addToBattleQueue', isInTurn);
    }
-
-   const handleChangeCurrentScreen = (screen) => {
-      navigateToScreen(screen, { text: "LOL" });
-   };
 
    return (
       <>
          <div>
+            <div>Активних гравців: {playersNumber}</div>
             <h1>HOME page</h1>
             { playerData?.data ? (
                <div>Player name: {playerData.data.name}</div>
             ) : ""}
-            <button onClick={handleSendId}>Start</button>
             <br />
             <button
-               onClick={() => handleChangeCurrentScreen("battle")}
+               onClick={() => handleGoToTheBattle(true)}
             >
                Go to the battle
             </button>
          </div>
+         {isInBattleQueue ? (
+            <BattleWaitingPopup handleGoToTheBattle={handleGoToTheBattle}/>
+         ) : ""}
       </>
    );
 }
