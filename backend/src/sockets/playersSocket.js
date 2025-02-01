@@ -1,8 +1,6 @@
-const backendPlayers = {};
-let battleQueue  = [];
+import config from '../config/serverConfig.js';
 
-export function handlePlayerConnections(io, socket) {
-   const backendPlayerId = socket.handshake.auth?.playerId;
+export function handlePlayerConnections(io, socket, backendPlayerId, backendPlayers) {
    console.log(`User connected: ${socket.id} | ${backendPlayerId}`);
 
    if (!backendPlayerId) {
@@ -18,7 +16,9 @@ export function handlePlayerConnections(io, socket) {
       return;
    }
 
-   backendPlayers[backendPlayerId] = { socketId: socket.id, name: `${backendPlayerId} name` };
+   //---Збір-інформації-про-гравця---
+
+   backendPlayers[backendPlayerId] = { socketId: socket.id, name: `${backendPlayerId} name`, inBattle: false };
 
    function greeting() {
       socket.emit('playerData', { name: backendPlayers[backendPlayerId].name });
@@ -27,24 +27,29 @@ export function handlePlayerConnections(io, socket) {
 
    io.emit("updatePlayers", backendPlayers);
 
-   socket.on("addToBattleQueue", (isInTurn) => {
-      if (isInTurn){
-         if (!battleQueue.includes(backendPlayerId)){
-            battleQueue.push(backendPlayerId);
-            socket.emit("isInBattleQueue", {
-               status: true,
-               playersNum: battleQueue.length
-            });
-         }
-      }else{
-         battleQueue = battleQueue.filter(id => id !== backendPlayerId);
-         socket.emit("isInBattleQueue", {status: false});
-      }
+   socket.on("getPlayerData", () => {
+      greeting();
    });
 
-   setInterval(() => {
-      io.emit("getPlayersNumInQueue", battleQueue.length)
-   },2500)
+   //---Оновлення-кількості-гравців-в-мережі---
+
+   let intervalId = null;
+
+   socket.on("subscribePlayersNumber", () => {
+      if (!intervalId) {
+         intervalId = setInterval(() => {
+            const playersCount = Object.keys(backendPlayers).length;
+            socket.emit("playersNumber", playersCount);
+            console.log("Updated");
+         }, config.SERVER_TICK);
+      }
+   });
+   socket.on("unsubscribePlayersNumber", () => {
+      if (intervalId) {
+         clearInterval(intervalId);
+         intervalId = null;
+      }
+   });
 
    socket.on("disconnect", (reason) => {
       console.log(`Player ${socket.id} disconnected: ${reason}`);

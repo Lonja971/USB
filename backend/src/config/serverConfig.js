@@ -4,5 +4,6 @@ export default {
    SOCKET_OPTIONS: {
       pingInterval: 2000,
       pingTimeout: 5000
-   }
+   },
+   SERVER_TICK: 1000,
 };

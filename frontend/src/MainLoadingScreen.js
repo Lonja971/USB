@@ -20,7 +20,7 @@ export function MainLoadingScreen(){
                ...prevPlayerData,
                data: data,
             }));
-            navigateToScreen();
+            navigateToScreen('home', {isUpdatePlayerData: true});
             setIsMainLoadingScreen(false);
          });
       return () => {

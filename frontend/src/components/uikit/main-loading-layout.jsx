@@ -1,4 +1,4 @@
-export function MainLoadingLayout({mainLoadingScreenMessage, connectionInfo}){
+export function MainLoadingLayout({mainLoadingScreenMessage, connectionInfo }){
    return(
       <div className="loading__container">
          <div className="loading__logo">

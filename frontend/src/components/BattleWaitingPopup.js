@@ -13,18 +13,19 @@ export function BattleWaitingPopup({handleGoToTheBattle}){
       if (!socket) return;
 
       socket.on("getPlayersNumInQueue", (num) => {
-         setPlayersNumInQueue(num)
-         console.log("Оновили");
+         setPlayersNumInQueue(num);
+      })
+      socket.on("BattleFound", (status) => {
+         if (status){
+            navigateToScreen("battle");
+         }
       })
 
       return () => {
          socket.off("getPlayersNumInQueue");
       };
-   }, [socket]);
+   }, [socket, navigateToScreen]);
 
-   const handleChangeCurrentScreen = (screen) => {
-      navigateToScreen(screen, { text: "LOL" });
-   };
 
    return(
       <BattleWaitingPopupLayout handleGoToTheBattle={handleGoToTheBattle} playersNumInQueue={playersNumInQueue}/>

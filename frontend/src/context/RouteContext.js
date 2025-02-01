@@ -14,7 +14,7 @@ export const useRoute = () => useContext(RouteContext);
 export const RouteProvider = () => {
    const [screenProps, setScreenProps] = useState(null);
    const {setIsMainLoadingScreen, isMainLoadingScreen} = useAppData();
-   const [currentScreenName, setCurrentScreenName] = useState('home');
+   const [currentScreenName, setCurrentScreenName] = useState();
 
    const pages = {
       home: (props) => <Home {...props} />,
@@ -45,7 +45,7 @@ export const RouteProvider = () => {
                </motion.div>
             )}
          </AnimatePresence>
-         {CurrentScreen(screenProps)}
+         {currentScreenName ? CurrentScreen(screenProps) : ""}
       </RouteContext.Provider>
    );
 };
