@@ -3,6 +3,7 @@ import { handlePlayerConnections } from "./sockets/playersSocket.js";
 import { handleBattleEvents } from "./sockets/battleSocket.js";
 import { handleBattleQueueConnections } from "./sockets/battleQueueSocket.js";
 import config from './config/serverConfig.js';
+import { getPlayerId } from "./models/tokensModel.js";
 
 export function initSocketServer(server) {
    const io = new Server(server, {
@@ -17,16 +18,21 @@ export function initSocketServer(server) {
    const backendPlayers = {};
    const battles = {};
 
-   io.on("connection", (socket) => {
-      const backendPlayerId = socket.handshake.auth?.playerId;
-
-      handlePlayerConnections(io, socket, backendPlayerId, backendPlayers);
-      handleBattleQueueConnections(io, socket, backendPlayerId, battles, backendPlayers);
-      handleBattleEvents(io, socket, backendPlayers);
-
-      setInterval(() => {
-         console.log(backendPlayers);
-         console.log(battles);
-      }, 2500)
-   });
+   io.on("connection", async (socket) => {
+      try {
+         const playerIdInfo = await getPlayerId(socket.handshake.auth?.playerIdentifier);
+         if (!playerIdInfo.isSuccess){
+            playerIdInfo.message ? socket.emit("disconnectReason", playerIdInfo.message) : "";
+            socket.disconnect();
+            return;
+         }
+         const backendPlayerId = playerIdInfo.id;
+   
+         handlePlayerConnections(io, socket, backendPlayerId, backendPlayers);
+         handleBattleQueueConnections(io, socket, backendPlayerId, battles, backendPlayers);
+         handleBattleEvents(io, socket, backendPlayers);
+      } catch (error) {
+         console.error('Error fetching player data:', error);
+      }
+   });   
 }

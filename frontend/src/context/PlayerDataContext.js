@@ -4,10 +4,8 @@ const PlayerContext = createContext(null);
 
 export const usePlayerData = () => useContext(PlayerContext);
 
-export const PlayerDataProvider = ({ children, playerId }) => {
-   const [playerData, setPlayerData] = useState({
-      id: playerId
-   });
+export const PlayerDataProvider = ({ children }) => {
+   const [playerData, setPlayerData] = useState({});
    const [isMainLoadingScreen, setIsMainLoadingScreen] = useState(true);
    const [mainLoadingScreenMessage, setMainLoadingScreenMessage] = useState(null);
 

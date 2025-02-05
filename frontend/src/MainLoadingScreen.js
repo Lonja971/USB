@@ -16,11 +16,8 @@ export function MainLoadingScreen(){
       if (!socket) return;
          socket.on("playerData", (data) => {
             console.log(data);
-            setPlayerData((prevPlayerData) => ({
-               ...prevPlayerData,
-               data: data,
-            }));
-            navigateToScreen('home', {isUpdatePlayerData: true});
+            setPlayerData(data);
+            navigateToScreen('home');
             setIsMainLoadingScreen(false);
          });
       return () => {

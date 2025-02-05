@@ -18,7 +18,7 @@ export function setPlayersForBattle(io, battleQueue, backendPlayers, battles, ba
             const player = battleQueue.shift();
             if (player) {
                console.log(`Player ${backendPlayers[player].name} with status: ${backendPlayers[player].status}`);
-               if (backendPlayers[player].inBattle === false) {
+               if (backendPlayers[player].currentBattleId === null) {
                   teams[teamI + 1][foundPlayersNum + 1] = player;
                   foundPlayersNum++;
                } else {
@@ -42,8 +42,8 @@ export function setPlayersForBattle(io, battleQueue, backendPlayers, battles, ba
             battleQueue = battleQueue.filter(id => id !== player);
                
             if (backendPlayers[player] && backendPlayers[player].socketId) {
-               backendPlayers[player].inBattle = true;
-               console.log(`--Player ${backendPlayers[player].name} with status: ${backendPlayers[player].status}`);
+               backendPlayers[player].currentBattleId = battleId;
+               console.log(`--Player ${backendPlayers[player].name} with battle status: ${backendPlayers[player].currentBattleId}`);
                io.to(backendPlayers[player].socketId).emit("BattleFound", true);
             }
          });

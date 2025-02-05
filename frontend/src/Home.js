@@ -2,17 +2,14 @@ import { useEffect, useState } from "react";
 import { useSocket } from "./context/SocketContext";
 import { useRoute } from "./context/RouteContext";
 import { usePlayerData } from "./context/PlayerDataContext";
-import { motion, AnimatePresence } from "framer-motion";
 
 import { BattleWaitingPopup } from "./components/BattleWaitingPopup";
-import { MainLoadingLayout } from "./components/uikit/main-loading-layout";
 
-export function Home({ isUpdatePlayerData = true }) {
+export function Home() {
    const { playerData, setPlayerData } = usePlayerData();
    const { navigateToScreen } = useRoute();
    const socket = useSocket();
    
-   const [isPlayerDataLoaded, setIsPlayerDataLoaded] = useState(!isUpdatePlayerData);
    const [isInBattleQueue, setIsInBattleQueue] = useState(false);
    const [playersNumber, setPlayersNumber] = useState();
    
@@ -28,21 +25,16 @@ export function Home({ isUpdatePlayerData = true }) {
       socket.emit("subscribePlayersNumber");
 
       socket.on("updatePlayers", (data) => {
-         console.log(`Гравці:`)
-         console.log(data)
+         console.log("Гравці:");
+         console.log(data);
       });
+
       socket.on("isInBattleQueue", (data) => {
          setIsInBattleQueue(data.status);
       });
+
       socket.on("playersNumber", (number) => {
-         setPlayersNumber(number)
-      });
-      socket.on("playerData", (data) => {
-         setPlayerData((prevPlayerData) => ({
-            ...prevPlayerData,
-            data: data,
-         }))
-         setIsPlayerDataLoaded(true);
+         setPlayersNumber(number);
       });
 
       return () => {
@@ -55,48 +47,20 @@ export function Home({ isUpdatePlayerData = true }) {
       };
    }, [socket, setPlayerData]);
 
-   useEffect(() => {
-      if (isUpdatePlayerData){
-         socket.emit('getPlayerData');
-      }
-   }, [isUpdatePlayerData, socket]);
-
    const handleGoToTheBattle = (isInTurn) => {
-      socket.emit('addToBattleQueue', isInTurn);
-   }
+      socket.emit("addToBattleQueue", isInTurn);
+   };
 
    return (
       <>
-         {!isPlayerDataLoaded ? (
-            <AnimatePresence>
-               <motion.div
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, pointerEvents: "none" }}
-                  transition={{ duration: 0.5 }}
-               >
-                  <MainLoadingLayout/>
-               </motion.div>
-            </AnimatePresence>
-         ) : ""}
          <div>
-            {playersNumber ? (
-               <div>Активних гравців: {playersNumber}</div>
-            ) : ""}
+            {playersNumber ? <div>Активних гравців: {playersNumber}</div> : ""}
             <h1>HOME page</h1>
-            { playerData?.data ? (
-               <div>Player name: {playerData.data.name}</div>
-            ) : ""}
+            {playerData ? <div>Player name: {playerData.name}</div> : ""}
             <br />
-            <button
-               onClick={() => handleGoToTheBattle(true)}
-            >
-               Go to the battle
-            </button>
+            <button onClick={() => handleGoToTheBattle(true)}>Go to the battle</button>
          </div>
-         {isInBattleQueue ? (
-            <BattleWaitingPopup handleGoToTheBattle={handleGoToTheBattle}/>
-         ) : ""}
+         {isInBattleQueue ? <BattleWaitingPopup handleGoToTheBattle={handleGoToTheBattle} /> : ""}
       </>
    );
 }
