@@ -21,9 +21,12 @@ img {
 :root {
   --danger: #ff0000;
   --green: rgb(10, 180, 10);
+  --dark-green: rgb(6, 108, 6);
   --bg-color: #fff;
+  --form-color: #bebebe;
   --font-color: #13173c;
   --loader-color: #13173c;
+  --glass-color: #fdffe228;
 }
 
 body {
@@ -40,6 +43,83 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+a{
+  color: var(--green);
+  text-decoration: underline;
+}
+a:hover{
+  color: var(--dark-green);
+}
+
+._glass {
+  background: var(--glass-color);
+  color: var(--font-color);
+
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(6.8px);
+  -webkit-backdrop-filter: blur(6.8px);
+  border: 2px solid var(--font-color);
+}
+
+button{
+  position: relative;
+  border-radius: 0px;
+  padding: 10px 40px;
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+}
+button .line {
+  position: absolute;
+  transition: all 0.3s ease 0s;
+  background-color: var(--green);
+}
+button .line-top {
+  top: -2px;
+  left: -2px;
+  width: 0%;
+  height: 2px;
+}
+button .line-right {
+  top: -2px;
+  right: -2px;
+  width: 2px;
+  height: 0%;
+}
+button .line-bottom {
+  bottom: -2px;
+  right: -2px;
+  width: 0%;
+  height: 2px;
+}
+button .line-left {
+  left: -2px;
+  bottom: -2px;
+  height: 0%;
+  width: 2px;
+}
+button:hover {
+  color: var(--green);
+  box-shadow: 0px 0px 26px 12px var(--green-shadow);
+}
+button:hover .line-top {
+  width: calc(100% + 2px);
+}
+button:hover .line-right {
+  height: calc(100% + 2px);
+}
+button:hover .line-bottom {
+  width: calc(100% + 2px);
+}
+button:hover .line-left {
+  height: calc(100% + 2px);
+}
+
+.full-fixed-screen{
+  width: 100%;
+  height: 100%;
+  position: fixed;
 }
 
 /*---LOADER---*/
@@ -78,6 +158,8 @@ code {
     opacity: 0;
   }
 }
+
+/*---SERVER-STATUS---*/
 
 .server-status{
   width: 25px;

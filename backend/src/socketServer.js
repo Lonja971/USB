@@ -20,7 +20,7 @@ export function initSocketServer(server) {
 
    io.on("connection", async (socket) => {
       try {
-         const playerIdInfo = await getPlayerId(socket.handshake.auth?.playerIdentifier);
+         const playerIdInfo = await getPlayerId(socket.handshake.auth?.playerToken);
          if (!playerIdInfo.isSuccess){
             playerIdInfo.message ? socket.emit("disconnectReason", playerIdInfo.message) : "";
             socket.disconnect();

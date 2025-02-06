@@ -2,8 +2,11 @@ import express from "express";
 import cors from "cors";
 import { createServer } from "http";
 import { initSocketServer } from "../src/socketServer.js";
+import { initRegister } from "./register.js";
+import { initLogin } from "./login.js";
 
 const app = express();
+app.use(express.json());
 const port = process.env.PORT || 3002;
 
 app.use(cors({
@@ -14,6 +17,8 @@ app.use(cors({
 
 const server = createServer(app);
 initSocketServer(server);
+initRegister(app);
+initLogin(app);
 
 server.listen(port, () => {
    console.log(`[ :3 ] Server started: http://localhost:${port}`);

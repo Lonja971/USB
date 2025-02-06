@@ -6,16 +6,16 @@ const SocketContext = createContext(null);
 
 export const useSocket = () => useContext(SocketContext);
 
-export const SocketProvider = ({ children, playerIdentifier }) => {
+export const SocketProvider = ({ children, playerToken }) => {
    const socketRef = useRef(null);
    const { setMainLoadingScreenMessage, setIsMainLoadingScreen, setConnectionInfo } = useAppData();
    const [socket, setSocket] = useState(null);
 
    useEffect(() => {
-      if (playerIdentifier) {
-         socketRef.current = io('http://localhost:3002', {
+      if (playerToken) {
+         socketRef.current = io(process.env.REACT_APP_BACKEND_PORT, {
             auth: {
-               playerIdentifier,
+               playerToken,
             },
          });
 
@@ -26,7 +26,7 @@ export const SocketProvider = ({ children, playerIdentifier }) => {
             setSocket(null);
          };
       }
-   }, [playerIdentifier]);
+   }, [playerToken]);
 
    //---ПЕРЕВІРКА-НАЯВНОСТІ-ПРОБЛЕМ-З-ПІДКЛЮЧЕННЯМ---
    useEffect(() => {
