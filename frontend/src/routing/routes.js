@@ -1,0 +1,11 @@
+import { Home } from '../Home.js';
+import { Battle } from '../components/battle/battle.jsx';
+import { MapTest } from '../MapTest.js';
+
+export const DEFAULT_SCREEN = 'home';
+
+export const PAGES = {
+  home: Home,
+  battle: Battle,
+  testPage: MapTest
+};

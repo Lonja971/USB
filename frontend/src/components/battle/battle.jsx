@@ -1,10 +1,10 @@
-import { useRoute } from "../../context/RouteContext";
+import { useRoute } from "../../routing/RouteContext";
 
 export function Battle({ text }) {
-   const { navigateToScreen } = useRoute();
+   const { navigateToPage } = useRoute();
 
-   function handleToHome(){
-      navigateToScreen("home")
+   function handleToHome() {
+      navigateToPage("home")
    }
 
    return (

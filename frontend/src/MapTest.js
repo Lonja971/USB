@@ -1,15 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
 import './css/map_test.css';
+import { useRoute } from './routing/RouteContext';
 
-export function MapTest() {
-   const [mapSize, setMapSize] = useState({ cols: 40, rows: 40 });
-   const ships = {
-      1: { position: [[1, 1], [1, 2], [1, 3]] },
-      2: { position: [[5, 5], [5, 6], [5, 7]] },
-   };
-
+export function MapTest({testProp}) {
+   const { navigateToPage } = useRoute();
 
    return (
-      <div>MapTest</div>
+      <div>
+         <div>Test Page</div>
+         <p>My testProp: {testProp ? testProp : "null"}</p>
+         <button onClick={ () => navigateToPage()}>Return to Default</button>
+      </div>
    );
 }
+
+

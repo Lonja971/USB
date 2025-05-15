@@ -1,7 +1,7 @@
 import { Server } from "socket.io";
 import { handlePlayerConnections } from "./sockets/playersSocket.js";
 import { handleBattleEvents } from "./sockets/battleSocket.js";
-import { handleBattleQueueConnections } from "./sockets/battleQueueSocket.js";
+import { matchmaker } from "./matchmaker/matchmaker.js";
 import config from './config/serverConfig.js';
 import { getPlayerId } from "./models/tokensModel.js";
 
@@ -29,7 +29,7 @@ export function initSocketServer(server) {
          const backendPlayerId = playerIdInfo.id;
    
          handlePlayerConnections(io, socket, backendPlayerId, backendPlayers);
-         handleBattleQueueConnections(io, socket, backendPlayerId, battles, backendPlayers);
+         matchmaker(io, socket, backendPlayerId, battles, backendPlayers);
          handleBattleEvents(io, socket, backendPlayers);
       } catch (error) {
          console.error('Error fetching player data:', error);

@@ -5,6 +5,7 @@ const AppDataContext = createContext(null);
 export const useAppData = () => useContext(AppDataContext);
 
 export const AppDataProvider = ({ children }) => {
+   const [playerData, setPlayerData] = useState({});
    const [isMainLoadingScreen, setIsMainLoadingScreen] = useState(true);
    const [mainLoadingScreenMessage, setMainLoadingScreenMessage] = useState(null);
    const [connectionInfo, setConnectionInfo] = useState(null);
@@ -16,7 +17,9 @@ export const AppDataProvider = ({ children }) => {
          isMainLoadingScreen,
          setMainLoadingScreenMessage,
          setConnectionInfo,
-         connectionInfo
+         connectionInfo,
+         playerData,
+         setPlayerData
       }}>
          {children}
       </AppDataContext.Provider>

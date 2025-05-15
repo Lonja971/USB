@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSocket } from "../context/SocketContext";
-import { useRoute } from "../context/RouteContext";
+import { useRoute } from "../routing/RouteContext";
 
 import "../css/battle_waiting_window.css"
 
-export function BattleWaitingPopup({handleGoToTheBattle}){
+export function BattleWaitingPopup({ handleGoToTheBattle }) {
    const socket = useSocket();
-   const { navigateToScreen } = useRoute();
+   const { navigateToPage } = useRoute();
    const [playersNumInQueue, setPlayersNumInQueue] = useState(null);
 
    useEffect(() => {
@@ -16,23 +16,23 @@ export function BattleWaitingPopup({handleGoToTheBattle}){
          setPlayersNumInQueue(num);
       })
       socket.on("BattleFound", (status) => {
-         if (status){
-            navigateToScreen("battle");
+         if (status) {
+            navigateToPage("battle");
          }
       })
 
       return () => {
          socket.off("getPlayersNumInQueue");
       };
-   }, [socket, navigateToScreen]);
+   }, [socket, navigateToPage]);
 
 
-   return(
-      <BattleWaitingPopupLayout handleGoToTheBattle={handleGoToTheBattle} playersNumInQueue={playersNumInQueue}/>
+   return (
+      <BattleWaitingPopupLayout handleGoToTheBattle={handleGoToTheBattle} playersNumInQueue={playersNumInQueue} />
    )
 }
 
-function BattleWaitingPopupLayout({handleGoToTheBattle, playersNumInQueue}) {
+function BattleWaitingPopupLayout({ handleGoToTheBattle, playersNumInQueue }) {
    return (
       <div className="waiting">
          <div>
