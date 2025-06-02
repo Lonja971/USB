@@ -23,6 +23,7 @@ export function BattleWaitingPopup({ handleGoToTheBattle }) {
 
       return () => {
          socket.off("getPlayersNumInQueue");
+         socket.off("BattleFound");
       };
    }, [socket, navigateToPage]);
 

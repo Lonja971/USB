@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
-import { initSocketServer } from "../src/socketServer.js";
+import { initSocketHandler } from "./socketHandler.js";
 import { initRegister } from "./register.js";
 import { initLogin } from "./login.js";
 
@@ -16,7 +16,7 @@ app.use(cors({
 }));
 
 const server = createServer(app);
-initSocketServer(server);
+initSocketHandler(server);
 initRegister(app);
 initLogin(app);
 

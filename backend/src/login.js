@@ -1,15 +1,5 @@
 import express from "express";
-import { loginIntoPlayerAccount } from "./models/playerModel.js";
-
-const getDeviceId = (req) => {
-   const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-   
-   const userAgent = req.headers['user-agent'];
-
-   const deviceId = `${ip}_${userAgent}`;
-   
-   return deviceId;
-}
+import { PlayerRepository } from "./repositories/playerRepository.js";
 
 export function initLogin(app) {
    app.use(express.json());
@@ -22,11 +12,11 @@ export function initLogin(app) {
       }
 
       const playerIp = getDeviceId(req);
-      
+
       const loginIntoAccount = async () => {
          try {
-            const playerLogin = await loginIntoPlayerAccount(playerName, password, playerIp);
-            
+            const playerLogin = await PlayerRepository.loginIntoPlayerAccount(playerName, password, playerIp);
+
             return res.status(playerLogin.success ? 201 : 400).json({
                token: playerLogin.token || "",
                message: playerLogin.message
@@ -36,6 +26,6 @@ export function initLogin(app) {
          }
       };
       loginIntoAccount();
-      
+
    });
 }

@@ -1,55 +1,34 @@
-import { battleModes } from "../constants/battleModes.js";
-import { processBattleQueue } from "./processBattleQueue.js";
+import { battleQueue } from "../inMemoryRepos/battleQueue.js";
+import { BattleRepo } from "../inMemoryRepos/battle.js";
+import { PlayerRepo } from "../inMemoryRepos/player.js";
+import { handleBattleEvents } from "../socket/battle.js";
+import { UsualBattle } from "../battles/UsualBattle.js";
+import { PlayerRepository } from "../repositories/playerRepository.js";
 
-let battleQueues = {};
-let battleQueuesStatus = {};
+export function tryMatchPlayers() {
+    const queue = Array.from(battleQueue.entries());
 
-export function matchmaker(io, socket, backendPlayerId, battles, backendPlayers) {
-   socket.on("addToBattleQueue", ({ playerBattleMode, isInTurn }) => {
+    while (queue.length >= 2) {
+        const [id1, socket1] = queue.shift();
+        const [id2, socket2] = queue.shift();
 
-      if (!battleModes[playerBattleMode]?.isActive) {
-         console.log(`Режим "${playerBattleMode}" не активний чи не існує.`);
-         socket.emit("isInBattleQueue", {
-            status: false,
-            message: `Режим "${playerBattleMode}" не активний чи не існує.`
-         });
-         return;
-      }
+        const battleId = `battle-${Date.now()}`
+        const battleInstance = new UsualBattle(battleId, id1, id2);
+        BattleRepo.create(battleId, battleInstance);
 
-      for (const mode in battleQueues) {
-         if (battleQueues[mode].includes(backendPlayerId)) {
-            battleQueues[mode] = battleQueues[mode].filter(id => id !== backendPlayerId);
-            console.log(`Гравець ${backendPlayerId} видалений з черги "${mode}"`);
-         }
-      }
+        PlayerRepo.get(id1).data.currentBattleId = battleId;
+        PlayerRepo.get(id2).data.currentBattleId = battleId;
 
-      if (!battleQueues[playerBattleMode]) {
-         battleQueues[playerBattleMode] = [];
-      }
+        battleQueue.delete(id1);
+        battleQueue.delete(id2);
 
-      if (isInTurn) {
-         if (!battleQueues[playerBattleMode].includes(backendPlayerId)) {
-            battleQueues[playerBattleMode].push(backendPlayerId);
-            socket.emit("isInBattleQueue", { status: true });
+        socket1.emit("BattleFound", { battleId: battleId, opponentId: id2 });
+        socket2.emit("BattleFound", { battleId: battleId, opponentId: id1 });
 
-            if (!battleQueuesStatus[playerBattleMode]) {
-               battleQueuesStatus[playerBattleMode] = { isWorking: false, isNeedToRepeat: false };
-            }
+        PlayerRepository.updateCurrentBattleId(id1, battleId);
+        PlayerRepository.updateCurrentBattleId(id2, battleId);
 
-            if (battleQueuesStatus[playerBattleMode].isWorking) {
-               battleQueuesStatus[playerBattleMode].isNeedToRepeat = true;
-            } else {
-               processBattleQueue(playerBattleMode, io, backendPlayers, battles);
-            }
-         } else {
-            socket.emit("isInBattleQueue", {
-               status: true,
-               message: "Гравець вже в черзі!"
-            });
-         }
-      } else {
-         battleQueues[playerBattleMode] = battleQueues[playerBattleMode].filter(id => id !== backendPlayerId);
-         socket.emit("isInBattleQueue", { status: false });
-      }
-   });
+        handleBattleEvents(socket1, battleId, battleInstance, id1);
+        handleBattleEvents(socket2, battleId, battleInstance, id2);
+    }
 }

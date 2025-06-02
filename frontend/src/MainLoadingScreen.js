@@ -16,7 +16,14 @@ export function MainLoadingScreen() {
       socket.on("playerData", (data) => {
          console.log(data);
          setPlayerData(data);
-         navigateToPage('home');
+
+         if (data.currentBattleId){
+            navigateToPage("battle")
+         }
+         else{
+            navigateToPage('home');
+         }
+
          setIsMainLoadingScreen(false);
       });
       return () => {

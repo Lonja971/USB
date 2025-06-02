@@ -29,8 +29,13 @@ export function Home() {
          console.log(data);
       });
 
-      socket.on("isInBattleQueue", (data) => {
-         setIsInBattleQueue(data.status);
+      socket.on("queueStatus", (data) => {
+         if (data.status === "joined"){
+            setIsInBattleQueue(true);
+         }
+         else if (data.status === "left"){
+            setIsInBattleQueue(false);
+         }
       });
 
       socket.on("playersNumber", (number) => {
@@ -47,8 +52,8 @@ export function Home() {
       };
    }, [socket, setPlayerData]);
 
-   const handleGoToTheBattle = (isInTurn) => {
-      socket.emit("addToBattleQueue", { playerBattleMode: "1v1_usual", isInTurn });
+   const handleGoToTheBattle = () => {
+      socket.emit("findBattle");
    };
 
    return (
@@ -59,6 +64,8 @@ export function Home() {
             {playerData ? <div>Player name: {playerData.name}</div> : ""}
             <br />
             <button onClick={() => navigateToPage("testPage", { testProp: "Hiiii" })}>Test page</button>
+            <br />
+            <button onClick={handleGoToTheBattle}>Go to Battle</button>
          </div>
          {isInBattleQueue ? <BattleWaitingPopup handleGoToTheBattle={handleGoToTheBattle} /> : ""}
       </>
