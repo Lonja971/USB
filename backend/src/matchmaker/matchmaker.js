@@ -1,34 +1,51 @@
 import { battleQueue } from "../inMemoryRepos/battleQueue.js";
-import { BattleRepo } from "../inMemoryRepos/battle.js";
 import { PlayerRepo } from "../inMemoryRepos/player.js";
 import { handleBattleEvents } from "../socket/battle.js";
-import { UsualBattle } from "../battles/UsualBattle.js";
 import { PlayerRepository } from "../repositories/playerRepository.js";
+import { BattleFactory } from "../game/BattleFactory.js";
+import { battleModes } from "../config/game/battleModes.js";
 
-export function tryMatchPlayers() {
+export function tryMatchPlayers(io) {
+    const mode = battleModes["1v1_usual"];
     const queue = Array.from(battleQueue.entries());
 
-    while (queue.length >= 2) {
-        const [id1, socket1] = queue.shift();
-        const [id2, socket2] = queue.shift();
+    const totalPlayersNeeded = mode.teams * mode.playersInTeam;
 
-        const battleId = `battle-${Date.now()}`
-        const battleInstance = new UsualBattle(battleId, id1, id2);
-        BattleRepo.create(battleId, battleInstance);
+    while (queue.length >= totalPlayersNeeded) {
+        const selectedPlayers = [];
 
-        PlayerRepo.get(id1).data.currentBattleId = battleId;
-        PlayerRepo.get(id2).data.currentBattleId = battleId;
+        for (let i = 0; i < totalPlayersNeeded; i++) {
+            selectedPlayers.push(queue.shift());
+        }
 
-        battleQueue.delete(id1);
-        battleQueue.delete(id2);
+        const teams = [];
+        for (let i = 0; i < mode.teams; i++) {
+            const team = [];
+            for (let j = 0; j < mode.playersInTeam; j++) {
+                const [id, socket] = selectedPlayers[i * mode.playersInTeam + j];
+                team.push({ id, socket });
+            }
+            teams.push(team);
+        }
 
-        socket1.emit("BattleFound", { battleId: battleId, opponentId: id2 });
-        socket2.emit("BattleFound", { battleId: battleId, opponentId: id1 });
+        const [battleId, battleInstance] = BattleFactory.createBattle(io, teams, mode);
 
-        PlayerRepository.updateCurrentBattleId(id1, battleId);
-        PlayerRepository.updateCurrentBattleId(id2, battleId);
+        teams.flat().forEach(({ id, socket }) => {
+            socket.join(battleId);
+            PlayerRepo.get(id).data.currentBattleId = battleId;
+            PlayerRepository.updateCurrentBattleId(id, battleId);
+        });
 
-        handleBattleEvents(socket1, battleId, battleInstance, id1);
-        handleBattleEvents(socket2, battleId, battleInstance, id2);
+        teams.forEach((team, teamIndex) => {
+            team.forEach(({ id, socket }) => {
+                const opponents = teams.flat().filter(p => p.id !== id).map(p => p.id);
+                socket.emit("BattleFound", {
+                    battleId,
+                    team: teamIndex,
+                    opponents
+                });
+                handleBattleEvents(socket, battleId, battleInstance, id);
+            });
+        });
     }
 }

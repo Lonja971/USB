@@ -8,6 +8,7 @@ export function Battle({ text }) {
     const socket = useSocket();
 
     const [battleComment, setBattleComment] = useState("");
+    const [battleInfo, setBattleInfo] = useState(null);
 
     useEffect(() => {
         if (!socket) return;
@@ -18,10 +19,24 @@ export function Battle({ text }) {
             }
         })
 
+        socket.on("UpdateBattleInfo", (data) => {
+            if (data){
+                setBattleInfo(data)
+            }
+        })
+
+        socket.on("turnTimeout", (data) => {
+            if (data){
+                console.log(data);
+            }
+        })
+
         return () => {
-            socket.off("getPlayersNumInQueue");
+            socket.off("BattleStarted");
+            socket.off("UpdateBattleInfo");
+            socket.off("turnTimeout");
         };
-    }, [socket, navigateToPage]);
+    }, [socket, navigateToPage, battleInfo]);
 
     function handleToHome() {
         navigateToPage("home")
@@ -33,6 +48,11 @@ export function Battle({ text }) {
     }
 
     return (
-        <BattleLayout handleToHome={handleToHome} battleComment={battleComment} sendMove={sendMove}/>
+        <BattleLayout 
+            handleToHome={handleToHome}
+            battleComment={battleComment}
+            sendMove={sendMove}
+            battleInfo={battleInfo}
+        />
     );
 }

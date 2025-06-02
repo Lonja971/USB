@@ -24,7 +24,7 @@ export function initSocketHandler(server) {
          }
          const backendPlayerId = playerIdInfo.id;
 
-         handlePlayerConnections(socket, backendPlayerId);
+         handlePlayerConnections(io, socket, backendPlayerId);
       } catch (error) {
          console.error('Error fetching player data:', error);
       }

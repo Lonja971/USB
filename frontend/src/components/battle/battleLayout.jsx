@@ -1,4 +1,7 @@
-export function BattleLayout({ handleToHome, battleComment, sendMove }) {
+export function BattleLayout({ handleToHome, battleComment, sendMove, battleInfo }) {
+
+   console.log(battleInfo);
+
    return (
       <div>
          <div>

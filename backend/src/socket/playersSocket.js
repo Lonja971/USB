@@ -6,7 +6,7 @@ import { PlayerRepository } from "../repositories/playerRepository.js";
 import { handleBattleEvents } from './battle.js';
 import { BattleRepo } from '../inMemoryRepos/battle.js';
 
-export function handlePlayerConnections(socket, backendPlayerId) {
+export function handlePlayerConnections(io, socket, backendPlayerId) {
    console.log(`User connected: ${socket.id} | ${backendPlayerId}`);
 
    if (!backendPlayerId) {
@@ -26,6 +26,21 @@ export function handlePlayerConnections(socket, backendPlayerId) {
       try {
          const playerData = await PlayerRepository.getPlayerData(backendPlayerId);
 
+         //--- Якщо користувач вже в битві ---
+         if (playerData.current_battle_id) {
+            const playerCurrentBattleId = playerData.current_battle_id
+            const battleInstance = BattleRepo.get(playerCurrentBattleId)
+            
+            if (!battleInstance) {
+               PlayerRepository.deleteCurrentBattleId(backendPlayerId);
+               playerData.current_battle_id = null;
+            }
+            else{
+               handleBattleEvents(socket, playerCurrentBattleId, battleInstance, backendPlayerId);
+            }
+
+         }
+
          PlayerRepo.create(backendPlayerId, {
             socketId: socket.id,
             data: {
@@ -38,14 +53,8 @@ export function handlePlayerConnections(socket, backendPlayerId) {
          });
 
          const player = PlayerRepo.get(backendPlayerId);
-         socket.emit("playerData", player.data);
 
-         //--- Якщо користувач вже в битві ---
-         if (player.data.currentBattleId) {
-            const playerCurrentBattleId = player.data.currentBattleId
-            const battleInstance = BattleRepo.get(playerCurrentBattleId)
-            handleBattleEvents(socket, playerCurrentBattleId, battleInstance, backendPlayerId);
-         }
+         socket.emit("playerData", player.data);
 
          //--- ВІДСЛІДКОВУЄМО ---
 
@@ -63,7 +72,7 @@ export function handlePlayerConnections(socket, backendPlayerId) {
 
             battleQueue.set(backendPlayerId, socket);
             socket.emit("queueStatus", { status: "joined" });
-            tryMatchPlayers();
+            tryMatchPlayers(io);
          });
 
          socket.on("cancelBattleSearch", () => {

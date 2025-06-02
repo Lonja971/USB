@@ -37,7 +37,19 @@ export const PlayerRepository = {
       );
 
       const playerData = await PlayerRepository.getPlayerData(playerId);
-      console.log(`Test: ${playerData}`);
+
+      return playerData;
+   },
+
+   async deleteCurrentBattleId(playerId){
+      await pool.query(
+         `UPDATE players
+         SET current_battle_id = NULL
+         WHERE id = ?`,
+         [playerId]
+      );
+
+      const playerData = await PlayerRepository.getPlayerData(playerId);
 
       return playerData;
    },
