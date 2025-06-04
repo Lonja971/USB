@@ -4,7 +4,7 @@ export function handleBattleEvents(socket, battleId, battle, playerId) {
    console.log(`YES player [${playerId}] are in battle [${battleId}] ( timeLeft: [${timeLeft}])`);
    socket.on("getBattleState", () => {
       const gameState = battle.state.getState(playerId);
-      socket.emit("catchBattleState", gameState);
+      socket.emit("CatchBattleState", gameState);
    })
 
    socket.on("BattleMove", (data) => {

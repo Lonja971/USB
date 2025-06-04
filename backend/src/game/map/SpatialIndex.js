@@ -1,46 +1,47 @@
 export class SpatialIndex {
-    constructor() {
-        this.index = {};
-    }
+   constructor() {
+      this.cells = new Map();
+      this.shipCells = new Map();
+   }
 
-    _key(x, y) {
-        return `${x},${y}`;
-    }
+   coordToKey(x, y) {
+      return `${x},${y}`;
+   }
 
-    add(entity) {
-        const key = this._key(entity.x, entity.y);
-        if (!this.index[key]) {
-            this.index[key] = [];
-        }
-        this.index[key].push(entity);
-    }
+   add(x, y, shipId) {
+      const key = `${x},${y}`;
+      if (!this.cells.has(key)) this.cells.set(key, new Set());
+      this.cells.get(key).add(shipId);
 
-    remove(entity) {
-        const key = this._key(entity.x, entity.y);
-        if (!this.index[key]) return;
+      if (!this.shipCells.has(shipId)) this.shipCells.set(shipId, []);
+      this.shipCells.get(shipId).push({ x, y });
+   }
 
-        this.index[key] = this.index[key].filter(e => e !== entity);
-        if (this.index[key].length === 0) {
-            delete this.index[key];
-        }
-    }
+   clear(x, y) {
+      this.cells.delete(this.coordToKey(x, y));
+   }
 
-    move(entity, newX, newY) {
-        this.remove(entity);
-        entity.x = newX;
-        entity.y = newY;
-        this.add(entity);
-    }
+   isOccupied(x, y) {
+      return this.cells.has(this.coordToKey(x, y));
+   }
 
-    getAt(x, y) {
-        return this.index[this._key(x, y)] || [];
-    }
+   get(x, y) {
+      const key = `${x},${y}`;
+      return this.cells.get(key) ?? new Set();
+   }
 
-    isBlocked(x, y) {
-        return this.getAt(x, y).length > 0;
-    }
-
-    clear() {
-        this.index = {};
-    }
+   clearByEntityId(shipId) {
+      const cells = this.shipCells.get(shipId) ?? [];
+      for (const { x, y } of cells) {
+         const key = `${x},${y}`;
+         const set = this.cells.get(key);
+         if (set) {
+            set.delete(shipId);
+            if (set.size === 0) {
+               this.cells.delete(key);
+            }
+         }
+      }
+      this.shipCells.delete(shipId);
+   }
 }

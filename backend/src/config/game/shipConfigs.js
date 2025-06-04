@@ -1,5 +1,6 @@
 import { Battleship } from "../../game/entities/ships/Battleship.js";
 import { Submarine } from "../../game/entities/ships/Submarine.js";
+import { Cruiser } from "../../game/entities/ships/Cruiser.js";
 import { weaponTypes } from "./weaponTypes.js";
 
 export const DIRECTION = {
@@ -37,8 +38,16 @@ export const shipConfigs = {
       classRef: Submarine,
       health: 3,
       length: 3,
-      coreIndex: 1,
+      coreIndex: 0,
       availableSpeeds : [-1, 0, 1, 2],
       weapon: {type: "torpedo", classRef: weaponTypes.torpedo}
+   },
+   Cruiser: {
+      classRef: Cruiser,
+      health: 3,
+      length: 4,
+      coreIndex: 1,
+      availableSpeeds : [-1, 0, 1, 2],
+      weapon: {type: "cannon", classRef: weaponTypes.cannon}
    },
 };

@@ -6,9 +6,9 @@ export class BattleLogic {
    }
 
    makeMove(playerId, moveData) {
-      const playerTeam = getPlayerTeamIndex(playerId, this.state.teams);
+      const playerTeamIndex = getPlayerTeamIndex(playerId, this.state.teams);
 
-      if (playerTeam !== this.state.currentTurn) {
+      if (playerTeamIndex !== this.state.currentTurn) {
          return { success: false, message: 'Not your turn!' };
       }
       if (this.state.playersWhoMoved.includes(playerId)) {
@@ -23,19 +23,21 @@ export class BattleLogic {
 
             if (ship.type === "ship") {
                ship.updateFromPlayer(data);
+            }else{
+               return;
             }
          });
       }
 
       this.state.playersWhoMoved.push(playerId);
-      this.checkAndAdvanceTurn(playerTeam);
+      this.checkAndAdvanceTurn(playerTeamIndex);
 
       return { success: true, gameOver: false };
    }
 
-   checkAndAdvanceTurn(playerTeam) {
-      if (this.state.playersWhoMoved.length === this.state.teams[playerTeam].length){
-         this.processTurn();
+   checkAndAdvanceTurn(playerTeamIndex) {
+      if (this.state.playersWhoMoved.length === this.state.teams[playerTeamIndex].length){
+         this.processTurn(playerTeamIndex);
 
          const totalTeams = this.state.teams.length;
          let nextTurn = (this.state.currentTurn + 1) % totalTeams;
@@ -47,9 +49,27 @@ export class BattleLogic {
       }
    }
 
-   processTurn() {
-      Object.entries(this.state.ships).forEach(([key, ship]) => {
-         ship.update();
+   processTurn(teamIndex = "all") {
+      Object.entries(this.state.ships).forEach(([shipId, ship]) => {
+         if (ship.teamIndex === teamIndex || teamIndex === "all") {
+            const clone = ship.clone();
+            clone.update();
+            const newSegments = clone.getSegments();
+            
+            const conflict = newSegments.some(segment => {
+               const occupants = this.state.spatialIndex.get(segment.x, segment.y);
+               return occupants.size > 0 && !occupants.has(ship.id);
+            });
+
+            if (conflict) {
+               console.log(`Корабель ${ship.id} не може рухатись — конфлікт.`);
+               return;
+            }
+
+            this.state.spatialIndex.clearByEntityId(shipId);
+            ship.update();
+            this.state.updateSpatialShipSegments(ship);
+         }
       });
    }
 }

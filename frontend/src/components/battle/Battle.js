@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useSocket } from "../../context/SocketContext";
 import { useRoute } from "../../routing/RouteContext";
 import { BattleLoadingLayout } from "../uikit/battle-loading-layout";
-import { BattleMapLayout } from "./battle-map-layout";
-import { ActionBarLayout } from "./action-bar-layout";
+import { BattleMapLayout } from "./layout/battle-map-layout";
+import { ActionBarLayout } from "./layout/action-bar-layout";
 import "../../css/battle.css";
-import { RightBarLayout } from "./right-bar-layout";
+import { RightBarLayout } from "./layout/right-bar-layout";
 import { useAppData } from "../../context/AppData";
 
 export function Battle({ text }) {
@@ -16,10 +16,13 @@ export function Battle({ text }) {
    const [isLoadingScreen, setIsLoadingScreen] = useState(true);
    const [isBattleData, setIsBattleData] = useState(false);
 
+   const [modeInfo, setModeInfo] = useState({});
+   const [currentTurn, setCurrentTurn] = useState(null);
+   
    const [map, setMap] = useState(null);
    const [teams, setTeams] = useState([]);
    const [playerteamIndex, setPlayerTeamIndex] = useState();
-   const [modeInfo, setModeInfo] = useState({});
+   const [isPlayerTurn, setIsPlayerTurn] = useState(null);
    const [ships, setShips] = useState({});
    const [battlePhase, setBattlePhase] = useState("");
 
@@ -31,30 +34,46 @@ export function Battle({ text }) {
    useEffect(() => {
       if (!socket) return;
       socket.on("UpdateBattleData", handleUpdateBattleData)
-      socket.on("catchBattleState", (data) => {
-            console.log("Новий стейт");
-            console.log(data);
-            setShips(data.ships);
-            setMap(data.map);
-            setModeInfo(data.mode);
-            setBattlePhase(data.phase);
-            setPlayerTeamIndex(data.playerTeamIndex);
-            setTeams(data.teams);
-            
-            setIsBattleData(true);
-            setTimeout(() => { 
-               setIsLoadingScreen(false)
-            }, 5000);
+      socket.on("UpdateMoveData", (data) => {
+         console.log(data);
+         setShips((prevShips) => {
+            const updated = { ...prevShips };
+            for (const [id, newShip] of Object.entries(data.ships)) {
+               const oldShip = prevShips[id];
+               const hasChanged = !oldShip || JSON.stringify(oldShip) !== JSON.stringify(newShip);
+               if (hasChanged) {
+                  updated[id] = newShip;
+               }
+            }
+            return updated;
+         });
+      })
+      socket.on("CatchBattleState", (data) => {
+         console.log("Новий стейт");
+         console.log(data);
+         setShips(data.ships);
+         setMap(data.map);
+         setModeInfo(data.mode);
+         setBattlePhase(data.phase);
+         setCurrentTurn(data.currentTurn);
+         setPlayerTeamIndex(data.playerTeamIndex);
+         setTeams(data.teams);
+
+         setIsBattleData(true);
+         setTimeout(() => {
+            setIsLoadingScreen(false)
+         }, 5000);
       })
       return () => {
-            socket.off("UpdateBattleData", handleUpdateBattleData);
-            socket.off("catchBattleState");
+         socket.off("UpdateBattleData", handleUpdateBattleData);
+         socket.off("UpdateMoveData");
+         socket.off("CatchBattleState");
       };
    }, [socket, navigateToPage, ships]);
 
    useEffect(() => {
-      if (!map){
-            socket.emit("getBattleState");
+      if (!map) {
+         socket.emit("getBattleState");
       }
    }, [map, socket])
 
@@ -64,19 +83,15 @@ export function Battle({ text }) {
       }
    }, [ships, currentCastomnShip]);
 
+   useEffect(() => {
+   if (playerteamIndex !== undefined && currentTurn !== undefined) {
+      setIsPlayerTurn(playerteamIndex === currentTurn);
+   }
+   }, [currentTurn, playerteamIndex]);
+
    function handleUpdateBattleData(data) {
-      setShips((prevShips) => {
-         const updated = { ...prevShips };
-         for (const [id, newShip] of Object.entries(data.ships)) {
-            const oldShip = prevShips[id];
-            const hasChanged = !oldShip || JSON.stringify(oldShip) !== JSON.stringify(newShip);
-            if (hasChanged) {
-               updated[id] = newShip;
-            }
-         }
-         return updated;
-      });
       setBattlePhase(data.phase);
+      setCurrentTurn(data.currentTurn);
    }
 
    function sendMove() {
@@ -88,16 +103,16 @@ export function Battle({ text }) {
 
    return (
       <div className="battle-window">
-         { isLoadingScreen ? (
-            <BattleLoadingLayout teams={teams} playerTeamIndex={playerteamIndex} modeInfo={modeInfo}/>
+         {isLoadingScreen ? (
+            <BattleLoadingLayout teams={teams} playerTeamIndex={playerteamIndex} modeInfo={modeInfo} />
          ) : ""}
-         { isBattleData ? (
+         {isBattleData ? (
             <div className="battle-continer">
-               { currentCastomnShip ? (
-                  <ActionBarLayout moveData={moveData} setMoveData={setMoveData} playerId={playerData.id} currentCastomnShipData={ships[currentCastomnShip]}/>
+               {currentCastomnShip ? (
+                  <ActionBarLayout isPlayerTurn={isPlayerTurn} moveData={moveData} setMoveData={setMoveData} playerId={playerData.id} currentCastomnShipData={ships[currentCastomnShip]} />
                ) : ""}
-               <BattleMapLayout setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships}/>
-               <RightBarLayout sendMove={sendMove}/>
+               <BattleMapLayout setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
+               <RightBarLayout sendMove={sendMove} />
             </div>
          ) : ""}
       </div>

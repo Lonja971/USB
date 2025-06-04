@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { ShipControl } from "../uikit/battle/ship-control";
+import { ShipControl } from "../../uikit/battle/ship-control";
 
-export function ActionBarLayout({ moveData, setMoveData, playerId, currentCastomnShipData }) {
+export function ActionBarLayout({ isPlayerTurn, moveData, setMoveData, playerId, currentCastomnShipData }) {
    const shipId = currentCastomnShipData.id;
 
    const shipMove = moveData.update[shipId] ?? {
-     currentSpeedIndex: currentCastomnShipData.currentSpeedIndex,
-     turnTo: null
+      currentSpeedIndex: currentCastomnShipData.currentSpeedIndex,
+      turnTo: null
    };
 
    function updateShipMoveData(newSpeed = shipMove.currentSpeedIndex, newDirection = shipMove.turnTo) {
@@ -44,8 +44,9 @@ export function ActionBarLayout({ moveData, setMoveData, playerId, currentCastom
       <div className="battle__actionbar">
          Action bar
          <div>---</div>
-         { currentCastomnShipData.ownerId === playerId ? (
+         {currentCastomnShipData.ownerId === playerId ? (
             <ShipControl
+               isPlayerTurn={isPlayerTurn}
                currentCastomnShipData={currentCastomnShipData}
                plannedSpeed={shipMove.currentSpeedIndex}
                direction={shipMove.turnTo}

@@ -1,7 +1,7 @@
 import { DIRECTION, DIRECTION_KEYS } from "../../../config/game/shipConfigs.js";
 
 export class Ship {
-   constructor({ id, ownerId, teamIndex, x = null, y = null, health, length, availableSpeeds, weaponStrategy, coreIndex, direction }) {
+   constructor({ id, ownerId, teamIndex, x=null, y=null, health, length, availableSpeeds, weaponStrategy, coreIndex, direction }) {
       this.id = id;
       this.type = "ship";
       this.ownerId = ownerId;
@@ -20,6 +20,13 @@ export class Ship {
 
       this.currentSpeedIndex = 1;
       this.health = health;
+   }
+
+   setPosition(xPos, yPos) {
+      this.centerPosition = {
+         x: xPos,
+         y: yPos
+      };
    }
 
    fire() {
@@ -48,11 +55,12 @@ export class Ship {
       };
    }
 
+   getCurrentSpeed() {
+      return this.availableSpeeds[this.currentSpeedIndex];
+   }
+
    updateFromPlayer(data) {
-      console.log("Хочемо оновити " + this.id);
       if (data.currentSpeedIndex !== undefined) {
-         console.log(`є ${data.currentSpeedIndex}`);
-         console.log(`Чи є така щ: ${this.availableSpeeds[data.currentSpeedIndex]}`);
          this.currentSpeedIndex = this.availableSpeeds[data.currentSpeedIndex] ? data.currentSpeedIndex : 1;
       }
 
@@ -84,5 +92,24 @@ export class Ship {
 
       this.centerPosition.x += -dx * speed;
       this.centerPosition.y += -dy * speed;
+   }
+
+   clone() {
+      const Cls = this.constructor;
+      const newShip = new Cls({
+         id: this.id,
+         directionKey: this.directionKey,
+         teamIndex: this.teamIndex,
+         ownerId: this.ownerId,
+         config: this.config,
+         availableSpeeds: [...this.availableSpeeds],
+         direction: this.direction,
+         length: this.length
+      });
+      newShip.centerPosition = { ...this.centerPosition };
+      newShip.currentSpeedIndex = this.currentSpeedIndex;
+      newShip.direction = this.direction;
+
+      return newShip;
    }
 }

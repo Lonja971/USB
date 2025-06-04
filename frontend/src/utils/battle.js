@@ -15,6 +15,17 @@ export const getEntityParts = (entity) => {
   return parts;
 };
 
+export const directionKeys = [
+   "right",
+   "diag_nw",
+   "up",
+   "diag_ne",
+   "left",
+   "diag_se",
+   "down",
+   "diag_sw"
+];
+
 export const directionsMap = {
   left:  { dx: 1, dy: 0, name: "←" },
   right:   { dx: -1, dy: 0, name: "→" },
@@ -43,4 +54,36 @@ export function getShipBlocks(x, y, directionKey, length) {
   }
 
   return blocks;
+}
+
+export function turnLeft(current) {
+   const index = directionKeys.indexOf(current);
+   return directionKeys[(index + 1) % directionKeys.length];
+}
+
+export function turnRight(current) {
+   const index = directionKeys.indexOf(current);
+   return directionKeys[(index + directionKeys.length - 1) % directionKeys.length];
+}
+
+export function predictShipMovement(ship, update) {
+   let direction = ship.directionKey;
+   if (update.turnTo === "left") direction = turnLeft(direction);
+   if (update.turnTo === "right") direction = turnRight(direction);
+
+   const speedIndex = update.currentSpeedIndex ?? ship.currentSpeedIndex;
+   const speed = ship.availableSpeeds[speedIndex];
+   const offset = directionsMap[direction];
+
+   const dx = offset.dx * speed;
+   const dy = offset.dy * speed;
+
+   return {
+      ...ship,
+      directionKey: direction,
+      centerPosition: {
+         x: ship.centerPosition.x - dx,
+         y: ship.centerPosition.y - dy
+      }
+   };
 }

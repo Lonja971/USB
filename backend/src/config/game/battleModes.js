@@ -10,7 +10,8 @@ export const battleModes = {
         },
         playerShips: [
             { type: "Battleship", count: 2 },
-            { type: "Submarine"}
+            { type: "Submarine"},
+            { type: "Cruiser"},
         ],
 
         timers: {

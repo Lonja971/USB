@@ -5,7 +5,7 @@ export class Submarine extends Ship {
     constructor(data) {
         super({
             ...data,
-            weapon: new TorpedoStrategy()
+            weapon: new TorpedoStrategy(),
         });
     }
 }

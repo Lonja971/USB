@@ -1,4 +1,5 @@
 export function ShipControl({
+   isPlayerTurn,
    currentCastomnShipData,
    plannedSpeed,
    direction,
@@ -9,7 +10,10 @@ export function ShipControl({
    const sorted = indexedSpeeds.slice().sort((a, b) => b.speed - a.speed);
 
    return (
-      <div className="actionbar-shipcontrol">
+      <div
+         className="actionbar-shipcontrol"
+         style={{ opacity: !isPlayerTurn ? "0.5" : "" }}
+      >
          <h3>{currentCastomnShipData.id}</h3>
          <div className="actionbar-shipcontrol__wheel">
             <div>

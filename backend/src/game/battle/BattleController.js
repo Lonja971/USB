@@ -4,9 +4,9 @@ import { BattleTimer } from "./BattleTimer.js";
 import { BattleMessenger } from "./BattleMessanger.js";
 
 export class BattleController {
-   constructor({ io, id, map, teams, config, ships }) {
+   constructor({ io, id, map, teams, config }) {
       this.messenger = new BattleMessenger(io, id);
-      this.state = new BattleState({ id, config, teams, ships, map });
+      this.state = new BattleState({ id, config, teams, map });
       this.logic = new BattleLogic({ state: this.state});
       this.timer = new BattleTimer(1000);
 
@@ -26,6 +26,10 @@ export class BattleController {
    makeMove(playerId, move) {
       const result = this.logic.makeMove(playerId, move);
       if (result.success) {
+         this.state.teams.forEach((team, teamIndex) => {
+            console.log(typeof(teamIndex));
+            this.messenger.emitToTeam(teamIndex, "UpdateMoveData", this.state.getMoveData(teamIndex));
+         });
          this.timer.start(30, "active", this.onTick.bind(this), this.onTimeout.bind(this));
       }
    }
