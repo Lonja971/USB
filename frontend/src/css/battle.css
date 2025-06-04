@@ -1,0 +1,60 @@
+.battle-window{
+}
+
+.battle-window .waiting{
+   position: fixed;
+   z-index: 10;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   background-color: var(--bg-color);
+   display: flex;
+   flex-direction: column;
+   justify-content: center;
+   align-items: center;
+}
+
+.battle-continer{
+   position: relative;
+   display: flex;
+   width: 100%;
+   height: 100vh;
+}
+
+/*---MAP---*/
+
+.battle__map{
+   position: relative;
+   flex-grow: 1;
+   flex-shrink: 1;
+   flex-basis: 0;
+   min-width: 0;
+}
+
+/*---ACTION-BAR---*/
+
+.battle__actionbar{
+   background-color: rgba(255, 0, 0, 0.185);
+   border-right: 2px solid var(--font-color);
+   width: 20%;
+   flex-shrink: 0;
+}
+
+.actionbar-shipcontrol{
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+}
+.actionbar-shipcontrol__wheel{
+   display: flex;
+}
+
+/*---RIGHT-BAR---*/
+
+.battle__rightbar{
+   width: 20%;
+   flex-shrink: 0;
+   border-left: 2px solid var(--font-color);
+   background-color: rgba(0, 0, 255, 0.219);
+}

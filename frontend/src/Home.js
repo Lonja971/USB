@@ -52,8 +52,8 @@ export function Home() {
       };
    }, [socket, setPlayerData]);
 
-   const handleGoToTheBattle = () => {
-      socket.emit("findBattle");
+   const handleGoToTheBattle = (isNeed=true) => {
+      isNeed ? socket.emit("findBattle") : socket.emit("cancelBattleSearch");
    };
 
    return (
@@ -66,6 +66,7 @@ export function Home() {
             <button onClick={() => navigateToPage("testPage", { testProp: "Hiiii" })}>Test page</button>
             <br />
             <button onClick={handleGoToTheBattle}>Go to Battle</button>
+            <button onClick={() => navigateToPage("battle")}>Go to Battle page</button>
          </div>
          {isInBattleQueue ? <BattleWaitingPopup handleGoToTheBattle={handleGoToTheBattle} /> : ""}
       </>

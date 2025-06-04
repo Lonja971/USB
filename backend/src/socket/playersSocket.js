@@ -5,6 +5,7 @@ import { tryMatchPlayers } from '../matchmaker/matchmaker.js';
 import { PlayerRepository } from "../repositories/playerRepository.js";
 import { handleBattleEvents } from './battle.js';
 import { BattleRepo } from '../inMemoryRepos/battle.js';
+import { joinBattleRoom } from '../utils/battles/battle.js';
 
 export function handlePlayerConnections(io, socket, backendPlayerId) {
    console.log(`User connected: ${socket.id} | ${backendPlayerId}`);
@@ -28,14 +29,15 @@ export function handlePlayerConnections(io, socket, backendPlayerId) {
 
          //--- Якщо користувач вже в битві ---
          if (playerData.current_battle_id) {
-            const playerCurrentBattleId = playerData.current_battle_id
-            const battleInstance = BattleRepo.get(playerCurrentBattleId)
-            
+            const playerCurrentBattleId = playerData.current_battle_id;
+            const battleInstance = BattleRepo.get(playerCurrentBattleId);
+
             if (!battleInstance) {
                PlayerRepository.deleteCurrentBattleId(backendPlayerId);
                playerData.current_battle_id = null;
             }
             else{
+               joinBattleRoom(socket, backendPlayerId, playerCurrentBattleId, battleInstance.state.teams);
                handleBattleEvents(socket, playerCurrentBattleId, battleInstance, backendPlayerId);
             }
 

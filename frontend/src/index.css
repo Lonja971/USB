@@ -27,6 +27,7 @@ img {
   --font-color: #13173c;
   --loader-color: #13173c;
   --glass-color: #fdffe228;
+  --semi-transparent-dark: #00000075;
 }
 
 body {

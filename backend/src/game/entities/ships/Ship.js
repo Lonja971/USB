@@ -1,49 +1,88 @@
+import { DIRECTION, DIRECTION_KEYS } from "../../../config/game/shipConfigs.js";
+
 export class Ship {
-    constructor({ id, ownerId, teamIndex, x = null, y = null, health, length, speed, weaponStrategy, coreIndex, direction }) {
-        this.id = id;
-        this.ownerId = ownerId;
-        this.teamIndex = teamIndex;
+   constructor({ id, ownerId, teamIndex, x = null, y = null, health, length, availableSpeeds, weaponStrategy, coreIndex, direction }) {
+      this.id = id;
+      this.type = "ship";
+      this.ownerId = ownerId;
+      this.teamIndex = teamIndex;
 
-        this.length = length;
-        this.x = x;
-        this.y = y;
-        this.direction = direction;
-        this.coreIndex = coreIndex;
+      this.length = length;
+      this.centerPosition = {
+         x: x,
+         y: y
+      },
+      this.directionKey = direction;
+      this.direction = DIRECTION[this.directionKey];
+      this.coreIndex = coreIndex;
+      this.availableSpeeds = availableSpeeds;
+      this.weapon = weaponStrategy; 
 
-        this.health = health;
-        this.speed = speed;
+      this.currentSpeedIndex = 1;
+      this.health = health;
+   }
 
-        this.weapon = weaponStrategy; 
-    }
+   fire() {
+      this.weapon.fire(this);
+   }
 
-    fire() {
-        this.weapon.fire(this);
-    }
+   getSegments() {
+      const segments = [];
+      const half = Math.floor(this.length / 2);
 
-    getParts() {
-        const parts = [];
-        const { dx, dy } = this.direction;
-        for (let i = 0; i < this.length; i++) {
-        parts.push({
-            x: this.x + dx * i,
-            y: this.y + dy * i,
-            isCore: i === this.coreIndex
-        });
-        }
-        return parts;
-    }
+      for (let i = -half; i <= half; i++) {
+         segments.push({
+            x: this.centerPosition.x + i * this.direction.dx,
+            y: this.centerPosition.y + i * this.direction.dy
+         });
+      }
 
-    getCorePosition() {
-        const { dx, dy } = this.direction;
-        return {
-        x: this.x + dx * this.coreIndex,
-        y: this.y + dy * this.coreIndex
-        };
-    }
+      return segments;
+   }
 
-    moveForward() {
-        const { dx, dy } = this.direction;
-        this.x += dx;
-        this.y += dy;
-    }
+   getCorePosition() {
+      const { dx, dy } = this.direction;
+      return {
+      x: this.centerPosition.x + dx * this.coreIndex,
+      y: this.centerPosition.y + dy * this.coreIndex
+      };
+   }
+
+   updateFromPlayer(data) {
+      console.log("Хочемо оновити " + this.id);
+      if (data.currentSpeedIndex !== undefined) {
+         console.log(`є ${data.currentSpeedIndex}`);
+         console.log(`Чи є така щ: ${this.availableSpeeds[data.currentSpeedIndex]}`);
+         this.currentSpeedIndex = this.availableSpeeds[data.currentSpeedIndex] ? data.currentSpeedIndex : 1;
+      }
+
+      if (data.turnTo !== undefined) {
+         this.applyTurn(data.turnTo);
+      }
+   }
+
+   applyTurn(turn) {
+      const currentIndex = DIRECTION_KEYS.indexOf(this.directionKey);
+      if (currentIndex === -1) return;
+
+      let newIndex;
+      if (turn === "left") {
+         newIndex = (currentIndex + 1) % DIRECTION_KEYS.length;
+      } else if (turn === "right") {
+         newIndex = (currentIndex - 1 + DIRECTION_KEYS.length) % DIRECTION_KEYS.length;
+      } else {
+         return;
+      }
+
+      this.directionKey = DIRECTION_KEYS[newIndex];
+      this.direction = DIRECTION[this.directionKey];
+   }
+
+   update() {
+      const { dx, dy } = this.direction;
+      const speed = this.availableSpeeds[this.currentSpeedIndex];
+
+      this.centerPosition.x += -dx * speed;
+      this.centerPosition.y += -dy * speed;
+   }
 }
