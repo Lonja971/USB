@@ -37,14 +37,17 @@ export function Battle({ text }) {
       socket.on("UpdateMoveData", (data) => {
          console.log(data);
          setShips((prevShips) => {
-            const updated = { ...prevShips };
+            const updated = {};
             for (const [id, newShip] of Object.entries(data.ships)) {
                const oldShip = prevShips[id];
                const hasChanged = !oldShip || JSON.stringify(oldShip) !== JSON.stringify(newShip);
                if (hasChanged) {
                   updated[id] = newShip;
+               } else {
+                  updated[id] = oldShip;
                }
             }
+
             return updated;
          });
       })

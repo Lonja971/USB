@@ -1,7 +1,12 @@
 import { DIRECTION, DIRECTION_KEYS } from "../../../config/game/shipConfigs.js";
 
 export class Ship {
-   constructor({ id, ownerId, teamIndex, x=null, y=null, health, length, availableSpeeds, weaponStrategy, coreIndex, direction }) {
+   constructor({
+      id, ownerId, teamIndex, x=null, y=null,
+      speedsNullpoint, health, length,
+      availableSpeeds, coreIndex, direction,
+      configModules = [], configWeapons = [] 
+   }) {
       this.id = id;
       this.type = "ship";
       this.ownerId = ownerId;
@@ -16,9 +21,44 @@ export class Ship {
       this.direction = DIRECTION[this.directionKey];
       this.coreIndex = coreIndex;
       this.availableSpeeds = availableSpeeds;
-      this.weapon = weaponStrategy; 
+      this.speedsNullpoint = speedsNullpoint;
+      this.rudder = "center";
 
-      this.currentSpeedIndex = 1;
+      this.isSpotted = false;
+      this.spottedDuration = 0;
+      this.enemySpottingDuration = 4;
+      
+      this.weapons = [];
+      this.modules = [];
+
+      if (Array.isArray(configModules)) {
+         configModules.forEach(({ type, classRef, positionOffset = null, options = null }) => {
+            const moduleInstance = new classRef({
+               data: {
+                  type,
+                  entityId: this.id,
+                  positionOffset,
+               },
+               ...(options ?? {})
+            });
+            this.modules.push(moduleInstance);
+         });
+      }
+      if (Array.isArray(configWeapons)) {
+         configWeapons.forEach(({ type, classRef, positionOffset, options = null }) => {
+            const weaponInstance = new classRef({
+               data: {
+                  type,
+                  entityId: this.id,
+                  positionOffset,
+               },
+               ...(options ?? {})
+            });
+            this.weapons.push(weaponInstance);
+         });
+      }
+
+      this.currentSpeedIndex = this.speedsNullpoint;
       this.health = health;
    }
 
@@ -29,8 +69,9 @@ export class Ship {
       };
    }
 
-   fire() {
-      this.weapon.fire(this);
+   setSpotting(spottingDuration) {
+      this.isSpotted = true,
+      this.spottedDuration = spottingDuration
    }
 
    getSegments() {
@@ -47,12 +88,19 @@ export class Ship {
       return segments;
    }
 
-   getCorePosition() {
-      const { dx, dy } = this.direction;
+   getAbsoluteSegmentPosition(offset) {
+      const dir = this.direction;
       return {
-      x: this.centerPosition.x + dx * this.coreIndex,
-      y: this.centerPosition.y + dy * this.coreIndex
+         x: this.centerPosition.x + dir.dx * offset,
+         y: this.centerPosition.y + dir.dy * offset
       };
+   }
+
+   getLocatorPosition() {
+      const locator = this.modules.find(mod => mod.type === "locator");
+      const offset = locator?.positionOffset ?? this.coreIndex;
+
+      return this.getAbsoluteSegmentPosition(offset);
    }
 
    getCurrentSpeed() {
@@ -64,8 +112,19 @@ export class Ship {
          this.currentSpeedIndex = this.availableSpeeds[data.currentSpeedIndex] ? data.currentSpeedIndex : 1;
       }
 
+      console.log("Перевіряємо кермо");
       if (data.turnTo !== undefined) {
-         this.applyTurn(data.turnTo);
+         this.rudder = data.turnTo;
+         console.log("Змінюємо кермо: " + this.rudder);
+      }
+   }
+
+   updateSpotting() {
+      if (this.spottedDuration > 0) {
+         this.spottedDuration--;
+         if (this.spottedDuration === 0) {
+            this.isSpotted = false;
+         }
       }
    }
 
@@ -98,16 +157,16 @@ export class Ship {
       const Cls = this.constructor;
       const newShip = new Cls({
          id: this.id,
-         directionKey: this.directionKey,
          teamIndex: this.teamIndex,
+         length: this.length,
          ownerId: this.ownerId,
-         config: this.config,
          availableSpeeds: [...this.availableSpeeds],
          direction: this.direction,
-         length: this.length
       });
       newShip.centerPosition = { ...this.centerPosition };
+      newShip.directionKey = this.directionKey,
       newShip.currentSpeedIndex = this.currentSpeedIndex;
+      newShip.rudder = this.rudder;
       newShip.direction = this.direction;
 
       return newShip;

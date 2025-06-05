@@ -7,7 +7,6 @@ export class BattleState {
       this.id = id;
       this.config = config;
       this.map = map;
-      console.log(map);
       this.spatialIndex = new SpatialIndex();
       this.teams = teams;
       this.phase = "waiting";
@@ -36,11 +35,28 @@ export class BattleState {
       );
    }
 
+   getSpottedEnemyShips(desiredTeamIndex){
+      return Object.fromEntries(
+         Object.entries(this.ships)
+            .filter(([id, ship]) => ship.teamIndex !== desiredTeamIndex && ship.isSpotted === true)
+      );
+   }
+
+   getAllVisibleEntities(desiredTeamIndex) {
+      const teamShips = this.getTeamShips(desiredTeamIndex);
+      const spottedEnemies = this.getSpottedEnemyShips(desiredTeamIndex);
+
+      return {
+         ...teamShips,
+         ...spottedEnemies
+      };
+   }
+
    getState(playerId) {
       const playerTeamIndex = this.teams.findIndex(team =>
             team.some(player => player.id === playerId)
       );
-      const playersTeamEntities = this.getTeamShips(playerTeamIndex);
+      const playersTeamEntities = this.getAllVisibleEntities(playerTeamIndex);
       let teams = []
       this.teams.forEach(team => {
             const players = {}
@@ -74,7 +90,7 @@ export class BattleState {
 
    getMoveData(teamIndex){
       return {
-         ships: this.getTeamShips(teamIndex)
+         ships: this.getAllVisibleEntities(teamIndex)
       }
    }
 
@@ -105,10 +121,12 @@ export class BattleState {
                      teamIndex,
                      direction,
                      health: shipConfig.health,
+                     speedsNullpoint: shipConfig.speedsNullpoint,
                      length,
                      availableSpeeds: shipConfig.availableSpeeds,
                      coreIndex: shipConfig.coreIndex,
-                     weaponStrategy: new shipConfig.weapon.classRef()
+                     configModules: shipConfig.modules,
+                     configWeapons: shipConfig.weapons
                   });
 
                   const position = this.findFreePosition(tempShip, spawnZone);

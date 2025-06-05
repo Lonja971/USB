@@ -5,7 +5,6 @@ import { predictShipMovement } from "../../../utils/battle";
 
 export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData }) {
    const cellSize = 20;
-   map = { size: { x: 30, y: 30 } };
 
    return (
       <div className="battle__map" style={{ width: map.size.x * cellSize, height: map.size.y * cellSize }}>
@@ -14,17 +13,14 @@ export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData })
             <Ship setCurrentCastomnShip={setCurrentCastomnShip} key={ship.id} ship={ship} cellSize={cellSize} />
          ))}
          {Object.values(ships).map((ship) => {
-            const update = moveData.update?.[ship.id];
+            const update = moveData.update?.[ship.id] ?? {};
 
-            let predictedShip;
-            if (update) {
-               predictedShip = predictShipMovement(ship, update);
-            } else {
-               predictedShip = predictShipMovement(ship, {
-                  currentSpeedIndex: ship.currentSpeedIndex,
-                  turnTo: null
-               });
-            }
+            const merged = {
+               currentSpeedIndex: update.currentSpeedIndex ?? ship.currentSpeedIndex,
+               turnTo: update.turnTo ?? ship.rudder ?? "center",
+            };
+
+            const predictedShip = predictShipMovement(ship, merged);
 
             if (!predictedShip) return null;
 

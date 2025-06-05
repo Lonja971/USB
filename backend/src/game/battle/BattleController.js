@@ -27,7 +27,6 @@ export class BattleController {
       const result = this.logic.makeMove(playerId, move);
       if (result.success) {
          this.state.teams.forEach((team, teamIndex) => {
-            console.log(typeof(teamIndex));
             this.messenger.emitToTeam(teamIndex, "UpdateMoveData", this.state.getMoveData(teamIndex));
          });
          this.timer.start(30, "active", this.onTick.bind(this), this.onTimeout.bind(this));

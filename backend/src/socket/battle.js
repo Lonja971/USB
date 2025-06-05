@@ -8,7 +8,6 @@ export function handleBattleEvents(socket, battleId, battle, playerId) {
    })
 
    socket.on("BattleMove", (data) => {
-      console.log(`Player ${playerId} ходити хоче`);
       battle.makeMove(playerId, data)
    })
 }

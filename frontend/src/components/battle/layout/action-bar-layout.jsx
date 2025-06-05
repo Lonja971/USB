@@ -1,24 +1,24 @@
-import { useState } from "react";
 import { ShipControl } from "../../uikit/battle/ship-control";
 
 export function ActionBarLayout({ isPlayerTurn, moveData, setMoveData, playerId, currentCastomnShipData }) {
    const shipId = currentCastomnShipData.id;
 
-   const shipMove = moveData.update[shipId] ?? {
-      currentSpeedIndex: currentCastomnShipData.currentSpeedIndex,
-      turnTo: null
-   };
+   const rudderFromBackend = currentCastomnShipData.rudder ?? "center";
+   const speedFromBackend = currentCastomnShipData.currentSpeedIndex;
 
-   function updateShipMoveData(newSpeed = shipMove.currentSpeedIndex, newDirection = shipMove.turnTo) {
-      const baseSpeed = currentCastomnShipData.currentSpeedIndex;
+   const shipMoveUpdate = moveData.update[shipId] ?? {};
 
+   const currentSpeedIndex = shipMoveUpdate.currentSpeedIndex ?? speedFromBackend;
+   const turnTo = shipMoveUpdate.turnTo ?? rudderFromBackend;
+
+   function updateShipMoveData(newSpeed = currentSpeedIndex, newDirection = turnTo) {
       const updatedEntry = {};
 
-      if (newSpeed !== baseSpeed) {
+      if (newSpeed !== speedFromBackend) {
          updatedEntry.currentSpeedIndex = newSpeed;
       }
 
-      if (newDirection !== null) {
+      if (newDirection !== rudderFromBackend) {
          updatedEntry.turnTo = newDirection;
       }
 
@@ -36,24 +36,22 @@ export function ActionBarLayout({ isPlayerTurn, moveData, setMoveData, playerId,
    }
 
    function toggleDirection(dir) {
-      const newDirection = shipMove.turnTo === dir ? null : dir;
-      updateShipMoveData(shipMove.currentSpeedIndex, newDirection);
+      const newDirection = turnTo === dir ? "center" : dir;
+      updateShipMoveData(currentSpeedIndex, newDirection);
    }
 
    return (
       <div className="battle__actionbar">
-         Action bar
-         <div>---</div>
-         {currentCastomnShipData.ownerId === playerId ? (
+         {currentCastomnShipData.ownerId === playerId && (
             <ShipControl
                isPlayerTurn={isPlayerTurn}
                currentCastomnShipData={currentCastomnShipData}
-               plannedSpeed={shipMove.currentSpeedIndex}
-               direction={shipMove.turnTo}
-               setNewMoveData={(newSpeed) => updateShipMoveData(newSpeed, shipMove.turnTo)}
+               plannedSpeed={currentSpeedIndex}
+               direction={turnTo}
+               setNewMoveData={(newSpeed) => updateShipMoveData(newSpeed, turnTo)}
                toggleDirection={toggleDirection}
             />
-         ) : ""}
+         )}
       </div>
    );
 }

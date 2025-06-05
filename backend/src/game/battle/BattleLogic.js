@@ -51,25 +51,79 @@ export class BattleLogic {
 
    processTurn(teamIndex = "all") {
       Object.entries(this.state.ships).forEach(([shipId, ship]) => {
-         if (ship.teamIndex === teamIndex || teamIndex === "all") {
-            const clone = ship.clone();
-            clone.update();
-            const newSegments = clone.getSegments();
-            
-            const conflict = newSegments.some(segment => {
-               const occupants = this.state.spatialIndex.get(segment.x, segment.y);
-               return occupants.size > 0 && !occupants.has(ship.id);
-            });
+         if (ship.teamIndex !== teamIndex && teamIndex !== "all") return;
 
-            if (conflict) {
-               console.log(`Корабель ${ship.id} не може рухатись — конфлікт.`);
-               return;
-            }
-
-            this.state.spatialIndex.clearByEntityId(shipId);
-            ship.update();
-            this.state.updateSpatialShipSegments(ship);
-         }
+         this.processShipTurn(shipId, ship);
       });
+   }
+
+   processShipTurn(shipId, ship) {
+      this.tryApplyTurn(shipId, ship);
+      this.tryApplyMovement(shipId, ship);
+
+      ship.updateSpotting();
+
+      for (const module of ship.modules) {
+         if (module.type === "locator") {
+            module.tick(ship, this.state.ships);
+         }
+      }
+   }
+
+   tryApplyTurn(shipId, ship) {
+      if (!ship.rudder || ship.rudder === "center") return;
+      const clone = ship.clone();
+      clone.applyTurn(ship.rudder);
+      clone.update();
+      
+      const segments = clone.getSegments();
+
+      const hasConflict = segments.some(({ x, y }) => {
+         const occupants = this.state.spatialIndex.get(x, y);
+         return occupants.size > 0 && !occupants.has(ship.id);
+      });
+
+      if (!hasConflict) {
+         ship.applyTurn(ship.rudder);
+      } else {
+         console.log(`Поворот ${ship.rudder} для ${ship.id} неможливий — конфлікт.`);
+      }
+
+      ship.rudder = "center";
+   }
+
+   tryApplyMovement(shipId, ship) {
+      const clone = ship.clone();
+      let speedIndex = clone.currentSpeedIndex;
+      let foundSafe = false;
+
+      for (let i = speedIndex; i >= 0; i--) {
+         const attemptClone = ship.clone();
+         attemptClone.currentSpeedIndex = i;
+         attemptClone.update();
+
+         const segments = attemptClone.getSegments();
+         const conflict = segments.some(({ x, y }) => {
+            const occupants = this.state.spatialIndex.get(x, y);
+            return occupants.size > 0 && !occupants.has(ship.id);
+         });
+
+         if (!conflict) {
+            speedIndex = i;
+            foundSafe = true;
+            break;
+         }
+      }
+
+      if (!foundSafe) return;
+
+      this.state.spatialIndex.clearByEntityId(shipId);
+
+      const originalSpeedIndex = ship.currentSpeedIndex;
+      ship.currentSpeedIndex = speedIndex;
+      ship.update();
+      ship.currentSpeedIndex = originalSpeedIndex;
+
+      this.state.updateSpatialShipSegments(ship);
    }
 }
