@@ -77,10 +77,16 @@ export class BattleLogic {
       clone.update();
       
       const segments = clone.getSegments();
+      const mapWidth = this.state.map.width;
+      const mapHeight = this.state.map.height;
 
       const hasConflict = segments.some(({ x, y }) => {
+         const outOfBounds = x < 0 || y < 0 || x >= mapWidth || y >= mapHeight;
+
          const occupants = this.state.spatialIndex.get(x, y);
-         return occupants.size > 0 && !occupants.has(ship.id);
+         const collision = occupants.size > 0 && !occupants.has(ship.id);
+
+         return outOfBounds || collision;
       });
 
       if (!hasConflict) {
@@ -93,6 +99,9 @@ export class BattleLogic {
    }
 
    tryApplyMovement(shipId, ship) {
+      const mapWidth = this.state.map.width;
+      const mapHeight = this.state.map.height;
+
       const clone = ship.clone();
       let speedIndex = clone.currentSpeedIndex;
       let foundSafe = false;
@@ -104,8 +113,10 @@ export class BattleLogic {
 
          const segments = attemptClone.getSegments();
          const conflict = segments.some(({ x, y }) => {
+            const outOfBounds = x < 0 || y < 0 || x >= mapWidth || y >= mapHeight;
             const occupants = this.state.spatialIndex.get(x, y);
-            return occupants.size > 0 && !occupants.has(ship.id);
+            const collision = occupants.size > 0 && !occupants.has(ship.id);
+            return outOfBounds || collision;
          });
 
          if (!conflict) {

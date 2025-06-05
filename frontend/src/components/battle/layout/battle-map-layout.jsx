@@ -3,7 +3,7 @@ import { Ship } from "../entities/ship"
 import { PredictedShip } from "../entities/predicted-ship";
 import { predictShipMovement } from "../../../utils/battle";
 
-export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData }) {
+export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData, playerteamIndex }) {
    const cellSize = 20;
 
    return (
@@ -13,15 +13,18 @@ export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData })
             <Ship setCurrentCastomnShip={setCurrentCastomnShip} key={ship.id} ship={ship} cellSize={cellSize} />
          ))}
          {Object.values(ships).map((ship) => {
-            const update = moveData.update?.[ship.id] ?? {};
+            console.log(ship.teamIndex);
+            console.log(playerteamIndex);
+            if (ship.teamIndex !== playerteamIndex) return null;
 
+            const update = moveData.update?.[ship.id] ?? {};
             const merged = {
+               ...ship,
                currentSpeedIndex: update.currentSpeedIndex ?? ship.currentSpeedIndex,
-               turnTo: update.turnTo ?? ship.rudder ?? "center",
+               rudder: update.turnTo ?? ship.rudder ?? "center",
             };
 
-            const predictedShip = predictShipMovement(ship, merged);
-
+            const predictedShip = predictShipMovement(merged);
             if (!predictedShip) return null;
 
             return (

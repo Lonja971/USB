@@ -7,6 +7,6 @@ export class Submarine extends Ship {
          ...data
       });
 
-      this.enemySpottingDuration = 3;
+      this.defaultSpottingDuration = 3;
    }
 }

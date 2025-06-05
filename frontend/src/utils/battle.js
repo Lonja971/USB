@@ -66,13 +66,12 @@ export function turnRight(current) {
    return directionKeys[(index + directionKeys.length - 1) % directionKeys.length];
 }
 
-export function predictShipMovement(ship, update) {
+export function predictShipMovement(ship) {
    let direction = ship.directionKey;
-   if (update.turnTo === "left") direction = turnLeft(direction);
-   if (update.turnTo === "right") direction = turnRight(direction);
+   if (ship.rudder === "left") direction = turnLeft(direction);
+   if (ship.rudder === "right") direction = turnRight(direction);
 
-   const speedIndex = update.currentSpeedIndex ?? ship.currentSpeedIndex;
-   const speed = ship.availableSpeeds[speedIndex];
+   const speed = ship.availableSpeeds[ship.currentSpeedIndex];
    const offset = directionsMap[direction];
 
    const dx = offset.dx * speed;

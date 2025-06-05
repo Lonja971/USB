@@ -1,6 +1,7 @@
 import { PlayerRepo } from "../../inMemoryRepos/player.js";
 import { SpatialIndex } from "../map/SpatialIndex.js";
 import { shipConfigs } from "../../config/game/shipConfigs.js";
+import { serializeShip } from "../../services/shipSerializer.js";
 
 export class BattleState {
    constructor({ id, config, teams, map }) {
@@ -42,13 +43,21 @@ export class BattleState {
       );
    }
 
-   getAllVisibleEntities(desiredTeamIndex) {
-      const teamShips = this.getTeamShips(desiredTeamIndex);
-      const spottedEnemies = this.getSpottedEnemyShips(desiredTeamIndex);
+   getAllVisibleEntities(teamIndex, viewerId) {
+      const teamShips = this.getTeamShips(teamIndex);
+      const spottedEnemies = this.getSpottedEnemyShips(teamIndex);
+
+      const serializeAndMap = (shipsObj) => {
+         return Object.values(shipsObj).map(ship => serializeShip(ship, viewerId, teamIndex))
+            .reduce((acc, ship) => {
+            acc[ship.id] = ship;
+            return acc;
+            }, {});
+      };
 
       return {
-         ...teamShips,
-         ...spottedEnemies
+         ...serializeAndMap(teamShips),
+         ...serializeAndMap(spottedEnemies),
       };
    }
 
@@ -56,7 +65,7 @@ export class BattleState {
       const playerTeamIndex = this.teams.findIndex(team =>
             team.some(player => player.id === playerId)
       );
-      const playersTeamEntities = this.getAllVisibleEntities(playerTeamIndex);
+      const playersTeamEntities = this.getAllVisibleEntities(playerTeamIndex, playerId);
       let teams = []
       this.teams.forEach(team => {
             const players = {}
@@ -88,9 +97,9 @@ export class BattleState {
       }
    }
 
-   getMoveData(teamIndex){
+   getMoveData(teamIndex, playerId){
       return {
-         ships: this.getAllVisibleEntities(teamIndex)
+         ships: this.getAllVisibleEntities(teamIndex, playerId)
       }
    }
 

@@ -34,45 +34,14 @@ export function Battle({ text }) {
    useEffect(() => {
       if (!socket) return;
       socket.on("UpdateBattleData", handleUpdateBattleData)
-      socket.on("UpdateMoveData", (data) => {
-         console.log(data);
-         setShips((prevShips) => {
-            const updated = {};
-            for (const [id, newShip] of Object.entries(data.ships)) {
-               const oldShip = prevShips[id];
-               const hasChanged = !oldShip || JSON.stringify(oldShip) !== JSON.stringify(newShip);
-               if (hasChanged) {
-                  updated[id] = newShip;
-               } else {
-                  updated[id] = oldShip;
-               }
-            }
-
-            return updated;
-         });
-      })
-      socket.on("CatchBattleState", (data) => {
-         console.log("Новий стейт");
-         console.log(data);
-         setShips(data.ships);
-         setMap(data.map);
-         setModeInfo(data.mode);
-         setBattlePhase(data.phase);
-         setCurrentTurn(data.currentTurn);
-         setPlayerTeamIndex(data.playerTeamIndex);
-         setTeams(data.teams);
-
-         setIsBattleData(true);
-         setTimeout(() => {
-            setIsLoadingScreen(false)
-         }, 5000);
-      })
+      socket.on("UpdateMoveData", handleMoveData)
+      socket.on("CatchBattleState", handleCatchBattleState)
       return () => {
          socket.off("UpdateBattleData", handleUpdateBattleData);
          socket.off("UpdateMoveData");
          socket.off("CatchBattleState");
       };
-   }, [socket, navigateToPage, ships]);
+   }, [socket]);
 
    useEffect(() => {
       if (!map) {
@@ -81,16 +50,45 @@ export function Battle({ text }) {
    }, [map, socket])
 
    useEffect(() => {
-      if (!currentCastomnShip && ships && Object.keys(ships).length > 0) {
-         setCurrentCastomnShip(Object.keys(ships)[0]);
-      }
-   }, [ships, currentCastomnShip]);
-
-   useEffect(() => {
    if (playerteamIndex !== undefined && currentTurn !== undefined) {
       setIsPlayerTurn(playerteamIndex === currentTurn);
    }
    }, [currentTurn, playerteamIndex]);
+
+   function handleCatchBattleState(data){
+      console.log("Новий стейт");
+      console.log(data);
+      setShips(data.ships);
+      setMap(data.map);
+      setModeInfo(data.mode);
+      setBattlePhase(data.phase);
+      setCurrentTurn(data.currentTurn);
+      setPlayerTeamIndex(data.playerTeamIndex);
+      setTeams(data.teams);
+
+      setIsBattleData(true);
+      setTimeout(() => {
+         setIsLoadingScreen(false)
+      }, 5000);
+   }
+
+   function handleMoveData(data) {
+      setShips(prevShips => {
+         const updatedShips = { ...prevShips };
+
+         for (const [id, newShip] of Object.entries(data.ships)) {
+            const oldShip = prevShips[id];
+
+            // якщо новий корабель такий самий — не перезаписуємо (щоб не спричинити rerender або втрату стану)
+            const sameShip = JSON.stringify(oldShip) === JSON.stringify(newShip);
+            if (!sameShip) {
+               updatedShips[id] = newShip;
+            }
+         }
+
+         return updatedShips;
+      });
+   }
 
    function handleUpdateBattleData(data) {
       setBattlePhase(data.phase);
@@ -99,8 +97,12 @@ export function Battle({ text }) {
 
    function sendMove() {
       socket.emit("BattleMove", moveData);
-      setMoveData({
-         update: {}
+      setMoveData(prev => {
+         const newUpdate = { ...prev.update };
+         for (const shipId of Object.keys(newUpdate)) {
+            delete newUpdate[shipId];
+         }
+         return { update: newUpdate };
       });
    }
 
@@ -111,10 +113,8 @@ export function Battle({ text }) {
          ) : ""}
          {isBattleData ? (
             <div className="battle-continer">
-               {currentCastomnShip ? (
-                  <ActionBarLayout isPlayerTurn={isPlayerTurn} moveData={moveData} setMoveData={setMoveData} playerId={playerData.id} currentCastomnShipData={ships[currentCastomnShip]} />
-               ) : ""}
-               <BattleMapLayout setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
+               <ActionBarLayout isPlayerTurn={isPlayerTurn} moveData={moveData} setMoveData={setMoveData} playerId={playerData.id} currentCastomnShipData={ships[currentCastomnShip]} />
+               <BattleMapLayout playerteamIndex={playerteamIndex} setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
                <RightBarLayout sendMove={sendMove} />
             </div>
          ) : ""}

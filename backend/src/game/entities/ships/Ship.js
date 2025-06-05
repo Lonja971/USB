@@ -2,10 +2,10 @@ import { DIRECTION, DIRECTION_KEYS } from "../../../config/game/shipConfigs.js";
 
 export class Ship {
    constructor({
-      id, ownerId, teamIndex, x=null, y=null,
+      id, ownerId, teamIndex, x = null, y = null,
       speedsNullpoint, health, length,
       availableSpeeds, coreIndex, direction,
-      configModules = [], configWeapons = [] 
+      configModules = [], configWeapons = []
    }) {
       this.id = id;
       this.type = "ship";
@@ -23,11 +23,13 @@ export class Ship {
       this.availableSpeeds = availableSpeeds;
       this.speedsNullpoint = speedsNullpoint;
       this.rudder = "center";
+      this.currentSpeedIndex = this.speedsNullpoint;
+      this.health = health;
 
       this.isSpotted = false;
       this.spottedDuration = 0;
-      this.enemySpottingDuration = 4;
-      
+      this.defaultSpottingDuration = 4;
+
       this.weapons = [];
       this.modules = [];
 
@@ -57,9 +59,6 @@ export class Ship {
             this.weapons.push(weaponInstance);
          });
       }
-
-      this.currentSpeedIndex = this.speedsNullpoint;
-      this.health = health;
    }
 
    setPosition(xPos, yPos) {
@@ -71,7 +70,7 @@ export class Ship {
 
    setSpotting(spottingDuration) {
       this.isSpotted = true,
-      this.spottedDuration = spottingDuration
+         this.spottedDuration = spottingDuration
    }
 
    getSegments() {
@@ -165,7 +164,7 @@ export class Ship {
       });
       newShip.centerPosition = { ...this.centerPosition };
       newShip.directionKey = this.directionKey,
-      newShip.currentSpeedIndex = this.currentSpeedIndex;
+         newShip.currentSpeedIndex = this.currentSpeedIndex;
       newShip.rudder = this.rudder;
       newShip.direction = this.direction;
 
