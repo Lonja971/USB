@@ -11,7 +11,7 @@ export class LocatorModule extends Module {
       this.radius = radius ?? 15
    }
 
-   tick(currentShip, allShips) {
+   tick(currentShip, allShips, setSpottedEntity) {
       const ship = currentShip;
       const { x: x0, y: y0 } = ship.getAbsoluteSegmentPosition(this.positionOffset ?? ship.coreIndex);
       const radius = this.radius;
@@ -27,13 +27,13 @@ export class LocatorModule extends Module {
          const dy = ty - y0;
 
          if (Math.abs(dx) <= radius && Math.abs(dy) <= radius) {
-            target.setSpotting(target.defaultSpottingDuration ?? 3);
+            setSpottedEntity(target.id, target.defaultSpottingDuration ?? 3, ship.teamIndex);
             console.log(`🔭 Засвітили ${target.id} у (${tx}, ${ty})`);
          }
       }
    }
 
-   tickSpatial(spatialIndex, currentShip, allShips) {
+   tickSpatial(spatialIndex, currentShip, allShips, setSpottedEntity) {
       const ship = currentShip;
       const { x: x0, y: y0 } = ship.getAbsoluteSegmentPosition(this.positionOffset ?? ship.coreIndex);
       const radius = this.radius;
@@ -58,7 +58,7 @@ export class LocatorModule extends Module {
             const { x: tx, y: ty } = partCoords;
 
             if (Math.abs(tx - x0) <= radius && Math.abs(ty - y0) <= radius) {
-               target.setSpotting(target.defaultSpottingDuration ?? 3);
+               setSpottedEntity(target.id, target.defaultSpottingDuration ?? 3, ship.teamIndex);
                spottedIds.add(id);
             }
          }

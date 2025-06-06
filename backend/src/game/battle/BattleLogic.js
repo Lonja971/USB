@@ -58,53 +58,80 @@ export class BattleLogic {
    }
 
    processShipTurn(shipId, ship) {
-      this.tryApplyTurn(shipId, ship);
-      this.tryApplyMovement(shipId, ship);
+      let remainingManeuverPoints = ship.maneuverPoints;
+      console.log(`=== ${shipId} ===`);
+      remainingManeuverPoints = this.tryApplyTurn(remainingManeuverPoints, shipId, ship);
+      remainingManeuverPoints = this.tryApplyMovement(remainingManeuverPoints, shipId, ship);
 
-      ship.updateSpotting();
+      this.state.updateSpotting();
 
       for (const module of ship.modules) {
          if (module.type === "locator") {
-            module.tick(ship, this.state.ships);
+            module.tick(ship, this.state.ships, this.state.setSpottedEntity.bind(this.state));
          }
       }
    }
 
-   tryApplyTurn(shipId, ship) {
-      if (!ship.rudder || ship.rudder === "center") return;
-      const clone = ship.clone();
-      clone.applyTurn(ship.rudder);
-      clone.update();
-      
-      const segments = clone.getSegments();
+   tryApplyTurn(remainingManeuverPoints, shipId, ship) {
+      if (!ship.rudder || ship.rudder === "center") return remainingManeuverPoints;
+
+      const turnCost = ship.maneuverCosts.turn;
+      const moveCostPerStep = ship.maneuverCosts.moveForward;
       const mapWidth = this.state.map.width;
       const mapHeight = this.state.map.height;
 
-      const hasConflict = segments.some(({ x, y }) => {
-         const outOfBounds = x < 0 || y < 0 || x >= mapWidth || y >= mapHeight;
+      let found = false;
+      let chosenSpeedIndex = ship.currentSpeedIndex;
+      let totalCost = 0;
 
-         const occupants = this.state.spatialIndex.get(x, y);
-         const collision = occupants.size > 0 && !occupants.has(ship.id);
+      for (let i = ship.currentSpeedIndex; i >= 0; i--) {
+         const clone = ship.clone();
+         clone.applyTurn(ship.rudder);
+         clone.currentSpeedIndex = i;
+         clone.update();
 
-         return outOfBounds || collision;
-      });
+         const segments = clone.getSegments();
+         const hasConflict = segments.some(({ x, y }) => {
+            const outOfBounds = x < 0 || y < 0 || x >= mapWidth || y >= mapHeight;
+            const occupants = this.state.spatialIndex.get(x, y);
+            const collision = occupants.size > 0 && !occupants.has(ship.id);
+            return outOfBounds || collision;
+         });
 
-      if (!hasConflict) {
-         ship.applyTurn(ship.rudder);
-      } else {
-         console.log(`Поворот ${ship.rudder} для ${ship.id} неможливий — конфлікт.`);
+         const moveCost = moveCostPerStep * Math.abs(ship.availableSpeeds[i]);
+         totalCost = turnCost + moveCost;
+
+         if (!hasConflict && totalCost <= remainingManeuverPoints) {
+            chosenSpeedIndex = i;
+            found = true;
+            break;
+         }
       }
 
+      if (!found) {
+         ship.rudder = "center";
+         return remainingManeuverPoints;
+      }
+
+      ship.applyTurn(ship.rudder);
+      ship.currentSpeedIndex = chosenSpeedIndex;
+      ship.update();
+
       ship.rudder = "center";
+      return remainingManeuverPoints - totalCost;
    }
 
-   tryApplyMovement(shipId, ship) {
+   tryApplyMovement(remainingManeuverPoints, shipId, ship) {
       const mapWidth = this.state.map.width;
       const mapHeight = this.state.map.height;
+      
+      const moveForwardManeuverCosts = ship.maneuverCosts.moveForward;
+      if (remainingManeuverPoints - moveForwardManeuverCosts < 0) return remainingManeuverPoints;
 
       const clone = ship.clone();
       let speedIndex = clone.currentSpeedIndex;
       let foundSafe = false;
+      let currentManeuverCost = 0;
 
       for (let i = speedIndex; i >= 0; i--) {
          const attemptClone = ship.clone();
@@ -119,22 +146,28 @@ export class BattleLogic {
             return outOfBounds || collision;
          });
 
-         if (!conflict) {
+         currentManeuverCost = moveForwardManeuverCosts * Math.abs(ship.availableSpeeds[i]);
+         const avaibleManeuverPoints = remainingManeuverPoints - currentManeuverCost;
+
+         if (!conflict && avaibleManeuverPoints >= 0) {
             speedIndex = i;
             foundSafe = true;
             break;
          }
       }
 
-      if (!foundSafe) return;
+      if (!foundSafe) return remainingManeuverPoints;
 
       this.state.spatialIndex.clearByEntityId(shipId);
 
+      remainingManeuverPoints -= currentManeuverCost;
       const originalSpeedIndex = ship.currentSpeedIndex;
       ship.currentSpeedIndex = speedIndex;
       ship.update();
       ship.currentSpeedIndex = originalSpeedIndex;
 
       this.state.updateSpatialShipSegments(ship);
+
+      return remainingManeuverPoints;
    }
 }

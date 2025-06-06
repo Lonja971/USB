@@ -26,6 +26,7 @@ export function Battle({ text }) {
    const [ships, setShips] = useState({});
    const [battlePhase, setBattlePhase] = useState("");
 
+   const [lastKnownEnemyShips, setLastKnownEnemyShips] = useState({});
    const [currentCastomnShip, setCurrentCastomnShip] = useState(null);
    const [moveData, setMoveData] = useState({
       update: {}
@@ -76,15 +77,40 @@ export function Battle({ text }) {
       setShips(prevShips => {
          const updatedShips = { ...prevShips };
 
+         const updatesToLastKnown = {};
+
          for (const [id, newShip] of Object.entries(data.ships)) {
             const oldShip = prevShips[id];
-
-            // якщо новий корабель такий самий — не перезаписуємо (щоб не спричинити rerender або втрату стану)
             const sameShip = JSON.stringify(oldShip) === JSON.stringify(newShip);
+
             if (!sameShip) {
                updatedShips[id] = newShip;
             }
+
+            updatesToLastKnown[id] = null;
          }
+
+         for (const [oldId, oldShip] of Object.entries(prevShips)) {
+            if (!data.ships[oldId]) {
+               delete updatedShips[oldId];
+
+               if (oldShip.teamIndex !== playerteamIndex) {
+                  updatesToLastKnown[oldId] = oldShip;
+               }
+            }
+         }
+
+         setLastKnownEnemyShips(prev => {
+            const updated = { ...prev };
+            for (const [id, value] of Object.entries(updatesToLastKnown)) {
+               if (value === null) {
+                  delete updated[id];
+               } else {
+                  updated[id] = value;
+               }
+            }
+            return updated;
+         });
 
          return updatedShips;
       });
@@ -114,7 +140,7 @@ export function Battle({ text }) {
          {isBattleData ? (
             <div className="battle-continer">
                <ActionBarLayout isPlayerTurn={isPlayerTurn} moveData={moveData} setMoveData={setMoveData} playerId={playerData.id} currentCastomnShipData={ships[currentCastomnShip]} />
-               <BattleMapLayout playerteamIndex={playerteamIndex} setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
+               <BattleMapLayout lastKnownEnemyShips={lastKnownEnemyShips} playerteamIndex={playerteamIndex} setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
                <RightBarLayout sendMove={sendMove} />
             </div>
          ) : ""}

@@ -29,6 +29,22 @@ export class BattleState {
       }
    }
 
+   updateSpotting() {
+      this.teams.forEach(team => {
+         const spotted = team.spottedEntities;
+
+         if (!spotted) return;
+
+         for (const entityId in spotted) {
+            spotted[entityId].duration--;
+
+            if (spotted[entityId].duration <= 0) {
+               delete spotted[entityId];
+            }
+         }
+      });
+   }
+
    getTeamShips(desiredTeamIndex){
       return Object.fromEntries(
          Object.entries(this.ships)
@@ -36,10 +52,17 @@ export class BattleState {
       );
    }
 
-   getSpottedEnemyShips(desiredTeamIndex){
+   getSpottedEnemyShips(desiredTeamIndex) {
+      const team = this.teams[desiredTeamIndex];
+      const spotted = team?.spottedEntities;
+
+      if (!spotted) return {};
+
       return Object.fromEntries(
-         Object.entries(this.ships)
-            .filter(([id, ship]) => ship.teamIndex !== desiredTeamIndex && ship.isSpotted === true)
+         Object.entries(this.ships).filter(([id, ship]) =>
+            ship.teamIndex !== desiredTeamIndex &&
+            spotted[id]
+         )
       );
    }
 
@@ -103,6 +126,16 @@ export class BattleState {
       }
    }
 
+   setSpottedEntity(entityId, spotDuration, teamIndex) {
+      const team = this.teams[teamIndex];
+      if (!team.spottedEntities) {
+         team.spottedEntities = {};
+      }
+      team.spottedEntities[entityId] = {
+         duration: spotDuration
+      }
+   }
+
    spawnShipsForTeams(teams, config) {
       const zones = [
          { xStart: 0, xEnd: this.map.width, yStart: 0, yEnd: Math.floor(this.map.height / 2) - 1 },
@@ -133,6 +166,8 @@ export class BattleState {
                      speedsNullpoint: shipConfig.speedsNullpoint,
                      length,
                      availableSpeeds: shipConfig.availableSpeeds,
+                     maneuverPoints: shipConfig.maneuverPoints,
+                     maneuverCosts: shipConfig.maneuverCosts,
                      coreIndex: shipConfig.coreIndex,
                      configModules: shipConfig.modules,
                      configWeapons: shipConfig.weapons

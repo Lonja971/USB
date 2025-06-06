@@ -43,6 +43,11 @@ export const shipConfigs = {
          },
       ],
       availableSpeeds : [-1, 0, 1, 2],
+      maneuverPoints: 4,
+      maneuverCosts: {
+         moveForward: 1,
+         turn: 2
+      },
       speedsNullpoint: 1,
       weapons: [
          { type: "cannon", classRef: weaponTypes.cannon, positionOffset: -1 }
@@ -55,6 +60,11 @@ export const shipConfigs = {
       coreIndex: 0,
       availableSpeeds : [-1, 0, 1, 2],
       speedsNullpoint: 1,
+      maneuverPoints: 5,
+      maneuverCosts: {
+         moveForward: 1,
+         turn: 2
+      },
       modules: [
          {
             type: "locator",
@@ -75,6 +85,11 @@ export const shipConfigs = {
       length: 4,
       coreIndex: 1,
       availableSpeeds : [-1, 0, 1, 2],
+      maneuverPoints: 5,
+      maneuverCosts: {
+         moveForward: 1,
+         turn: 2
+      },
       speedsNullpoint: 1,
       modules: [
          {

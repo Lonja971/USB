@@ -4,7 +4,8 @@ export class Ship {
    constructor({
       id, ownerId, teamIndex, x = null, y = null,
       speedsNullpoint, health, length,
-      availableSpeeds, coreIndex, direction,
+      availableSpeeds, maneuverPoints, maneuverCosts,
+      coreIndex, direction,
       configModules = [], configWeapons = []
    }) {
       this.id = id;
@@ -21,6 +22,8 @@ export class Ship {
       this.direction = DIRECTION[this.directionKey];
       this.coreIndex = coreIndex;
       this.availableSpeeds = availableSpeeds;
+      this.maneuverPoints = maneuverPoints;
+      this.maneuverCosts = maneuverCosts;
       this.speedsNullpoint = speedsNullpoint;
       this.rudder = "center";
       this.currentSpeedIndex = this.speedsNullpoint;
@@ -115,15 +118,6 @@ export class Ship {
       if (data.turnTo !== undefined) {
          this.rudder = data.turnTo;
          console.log("Змінюємо кермо: " + this.rudder);
-      }
-   }
-
-   updateSpotting() {
-      if (this.spottedDuration > 0) {
-         this.spottedDuration--;
-         if (this.spottedDuration === 0) {
-            this.isSpotted = false;
-         }
       }
    }
 

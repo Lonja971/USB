@@ -2,8 +2,9 @@ import { GridLayour } from "./gridLayout"
 import { Ship } from "../entities/ship"
 import { PredictedShip } from "../entities/predicted-ship";
 import { predictShipMovement } from "../../../utils/battle";
+import { LastSpottedShip } from "../entities/last-spotted-ship";
 
-export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData, playerteamIndex }) {
+export function BattleMapLayout({ lastKnownEnemyShips, setCurrentCastomnShip, map, ships, moveData, playerteamIndex }) {
    const cellSize = 20;
 
    return (
@@ -12,9 +13,10 @@ export function BattleMapLayout({ setCurrentCastomnShip, map, ships, moveData, p
          {Object.values(ships).map((ship) => (
             <Ship setCurrentCastomnShip={setCurrentCastomnShip} key={ship.id} ship={ship} cellSize={cellSize} />
          ))}
+         {Object.values(lastKnownEnemyShips).map((lastKnownEnemyShip) => (
+            <LastSpottedShip key={lastKnownEnemyShip.id} ship={lastKnownEnemyShip} cellSize={cellSize} />
+         ))}
          {Object.values(ships).map((ship) => {
-            console.log(ship.teamIndex);
-            console.log(playerteamIndex);
             if (ship.teamIndex !== playerteamIndex) return null;
 
             const update = moveData.update?.[ship.id] ?? {};
