@@ -106,7 +106,14 @@ export function Battle({ text }) {
                if (value === null) {
                   delete updated[id];
                } else {
-                  updated[id] = value;
+                  updated[id] = {
+                     id: value.id,
+                     name: value.name,
+                     centerPosition: value.centerPosition,
+                     length: value.length,
+                     coreIndex: value.coreIndex,
+                     directionKey: value.directionKey,
+                  };
                }
             }
             return updated;

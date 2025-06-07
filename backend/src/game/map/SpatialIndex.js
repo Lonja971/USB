@@ -1,7 +1,7 @@
 export class SpatialIndex {
    constructor() {
       this.cells = new Map();
-      this.shipCells = new Map();
+      this.entityCells = new Map();
    }
 
    coordToKey(x, y) {
@@ -13,8 +13,8 @@ export class SpatialIndex {
       if (!this.cells.has(key)) this.cells.set(key, new Set());
       this.cells.get(key).add(shipId);
 
-      if (!this.shipCells.has(shipId)) this.shipCells.set(shipId, []);
-      this.shipCells.get(shipId).push({ x, y });
+      if (!this.entityCells.has(shipId)) this.entityCells.set(shipId, []);
+      this.entityCells.get(shipId).push({ x, y });
    }
 
    clear(x, y) {
@@ -31,7 +31,7 @@ export class SpatialIndex {
    }
 
    clearByEntityId(shipId) {
-      const cells = this.shipCells.get(shipId) ?? [];
+      const cells = this.entityCells.get(shipId) ?? [];
       for (const { x, y } of cells) {
          const key = `${x},${y}`;
          const set = this.cells.get(key);
@@ -42,6 +42,6 @@ export class SpatialIndex {
             }
          }
       }
-      this.shipCells.delete(shipId);
+      this.entityCells.delete(shipId);
    }
 }

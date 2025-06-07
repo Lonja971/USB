@@ -1,6 +1,7 @@
 export function serializeShip(ship, viewerId, viewerTeamIndex) {
    const data = {
       id: ship.id,
+      name: ship.name,
       type: ship.type,
       ownerId: ship.ownerId,
       teamIndex: ship.teamIndex,
@@ -9,7 +10,6 @@ export function serializeShip(ship, viewerId, viewerTeamIndex) {
       directionKey: ship.directionKey,
       direction: ship.direction,
       health: ship.health,
-      isSpotted: ship.isSpotted,
    };
 
    if (ship.teamIndex === viewerTeamIndex) {

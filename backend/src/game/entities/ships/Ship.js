@@ -2,13 +2,14 @@ import { DIRECTION, DIRECTION_KEYS } from "../../../config/game/shipConfigs.js";
 
 export class Ship {
    constructor({
-      id, ownerId, teamIndex, x = null, y = null,
-      speedsNullpoint, health, length,
+      id, name, ownerId, teamIndex, x = null, y = null,
+      speedsNullPointIndex, health, length,
       availableSpeeds, maneuverPoints, maneuverCosts,
-      coreIndex, direction,
+      coreIndex, detectionRadius, direction,
       configModules = [], configWeapons = []
    }) {
       this.id = id;
+      this.name = name;
       this.type = "ship";
       this.ownerId = ownerId;
       this.teamIndex = teamIndex;
@@ -21,16 +22,16 @@ export class Ship {
       this.directionKey = direction;
       this.direction = DIRECTION[this.directionKey];
       this.coreIndex = coreIndex;
+      this.detectionRadius = detectionRadius;
+
       this.availableSpeeds = availableSpeeds;
       this.maneuverPoints = maneuverPoints;
       this.maneuverCosts = maneuverCosts;
-      this.speedsNullpoint = speedsNullpoint;
+      this.speedsNullPointIndex = speedsNullPointIndex;
       this.rudder = "center";
-      this.currentSpeedIndex = this.speedsNullpoint;
+      this.currentSpeedIndex = this.speedsNullPointIndex;
       this.health = health;
 
-      this.isSpotted = false;
-      this.spottedDuration = 0;
       this.defaultSpottingDuration = 4;
 
       this.weapons = [];
@@ -71,11 +72,6 @@ export class Ship {
       };
    }
 
-   setSpotting(spottingDuration) {
-      this.isSpotted = true,
-         this.spottedDuration = spottingDuration
-   }
-
    getSegments() {
       const segments = [];
       const half = Math.floor(this.length / 2);
@@ -114,10 +110,8 @@ export class Ship {
          this.currentSpeedIndex = this.availableSpeeds[data.currentSpeedIndex] ? data.currentSpeedIndex : 1;
       }
 
-      console.log("Перевіряємо кермо");
       if (data.turnTo !== undefined) {
          this.rudder = data.turnTo;
-         console.log("Змінюємо кермо: " + this.rudder);
       }
    }
 

@@ -1,7 +1,7 @@
 import { PlayerRepo } from "../../inMemoryRepos/player.js";
 import { SpatialIndex } from "../map/SpatialIndex.js";
 import { shipConfigs } from "../../config/game/shipConfigs.js";
-import { serializeShip } from "../../services/shipSerializer.js";
+import { serializeEntity } from "../../services/index.js";
 
 export class BattleState {
    constructor({ id, config, teams, map }) {
@@ -12,14 +12,16 @@ export class BattleState {
       this.teams = teams;
       this.phase = "waiting";
 
-      this.ships = {};
+      this.entities = {};
       this.projectiles = [];
 
       this.currentTurn = 0;
       this.playersWhoMoved = [];
 
-      Object.entries(this.ships).forEach(([shipId, ship]) => {
-         this.updateSpatialShipSegments(ship);
+      Object.entries(this.entities).forEach(([entityId, entity]) => {
+         if (entity.type === "ship"){
+            this.updateSpatialShipSegments(entity);
+         }
       });
    }
    
@@ -29,57 +31,60 @@ export class BattleState {
       }
    }
 
-   updateSpotting() {
-      this.teams.forEach(team => {
-         const spotted = team.spottedEntities;
+   updateSpotting(teamIndex) {
+      for (let teamId = 0; teamId < this.teams.length; teamId++) {
+         if (teamIndex !== "all" && teamId !== teamIndex) continue;
 
-         if (!spotted) return;
-
+         const spotted = this.teams[teamId].spottedEntities;
+         if (!spotted) continue;
+   
          for (const entityId in spotted) {
             spotted[entityId].duration--;
-
+   
             if (spotted[entityId].duration <= 0) {
                delete spotted[entityId];
             }
          }
-      });
+      };
    }
 
-   getTeamShips(desiredTeamIndex){
+   getTeamEntities(desiredTeamIndex){
       return Object.fromEntries(
-         Object.entries(this.ships)
-            .filter(([id, ship]) => ship.teamIndex === desiredTeamIndex)
+         Object.entries(this.entities)
+            .filter(([id, entity]) => entity.teamIndex === desiredTeamIndex)
       );
    }
 
-   getSpottedEnemyShips(desiredTeamIndex) {
+   getSpottedEnemyEntities(desiredTeamIndex) {
       const team = this.teams[desiredTeamIndex];
       const spotted = team?.spottedEntities;
 
       if (!spotted) return {};
 
       return Object.fromEntries(
-         Object.entries(this.ships).filter(([id, ship]) =>
-            ship.teamIndex !== desiredTeamIndex &&
-            spotted[id]
+         Object.entries(this.entities).filter(([entityId, entity]) =>
+            entity.teamIndex !== desiredTeamIndex &&
+            spotted[entityId]
          )
       );
    }
 
    getAllVisibleEntities(teamIndex, viewerId) {
-      const teamShips = this.getTeamShips(teamIndex);
-      const spottedEnemies = this.getSpottedEnemyShips(teamIndex);
+      const teamEntities = this.getTeamEntities(teamIndex);
+      const spottedEnemies = this.getSpottedEnemyEntities(teamIndex);
 
-      const serializeAndMap = (shipsObj) => {
-         return Object.values(shipsObj).map(ship => serializeShip(ship, viewerId, teamIndex))
-            .reduce((acc, ship) => {
-            acc[ship.id] = ship;
-            return acc;
+      const serializeAndMap = (entitiesObj) => {
+         return Object.values(entitiesObj)
+            .map(entity => serializeEntity(entity, viewerId, teamIndex))
+            .filter(Boolean)
+            .reduce((acc, serialized) => {
+               acc[serialized.id] = serialized;
+               return acc;
             }, {});
       };
 
       return {
-         ...serializeAndMap(teamShips),
+         ...serializeAndMap(teamEntities),
          ...serializeAndMap(spottedEnemies),
       };
    }
@@ -159,16 +164,18 @@ export class BattleState {
 
                   const tempShip = new shipConfig.classRef({
                      id: shipId,
+                     name: shipConfig.name,
                      ownerId: player.id,
                      teamIndex,
                      direction,
                      health: shipConfig.health,
-                     speedsNullpoint: shipConfig.speedsNullpoint,
+                     speedsNullPointIndex: shipConfig.speedsNullPointIndex,
                      length,
                      availableSpeeds: shipConfig.availableSpeeds,
                      maneuverPoints: shipConfig.maneuverPoints,
                      maneuverCosts: shipConfig.maneuverCosts,
                      coreIndex: shipConfig.coreIndex,
+                     detectionRadius: shipConfig.detectionRadius,
                      configModules: shipConfig.modules,
                      configWeapons: shipConfig.weapons
                   });
@@ -177,7 +184,7 @@ export class BattleState {
                   if (position) {
                      tempShip.setPosition(position.x, position.y);
                      player.ships.push(tempShip);
-                     this.ships[shipId] = tempShip;
+                     this.entities[shipId] = tempShip;
                      this.updateSpatialShipSegments(tempShip);
                   } else {
                      console.warn(`Could not place ship ${shipId}`);

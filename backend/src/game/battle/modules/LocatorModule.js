@@ -52,7 +52,7 @@ export class LocatorModule extends Module {
 
             const locatorIndex = target.modules.find(m => m.type === "locator")?.positionOffset ?? target.coreIndex;
 
-            const partCoords = spatialIndex.shipCells.get(id)?.[locatorIndex];
+            const partCoords = spatialIndex.entityCells.get(id)?.[locatorIndex];
             if (!partCoords) continue;
 
             const { x: tx, y: ty } = partCoords;
