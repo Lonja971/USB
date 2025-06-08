@@ -29,7 +29,8 @@ export function Battle({ text }) {
    const [lastKnownEnemyShips, setLastKnownEnemyShips] = useState({});
    const [currentCastomnShip, setCurrentCastomnShip] = useState(null);
    const [moveData, setMoveData] = useState({
-      update: {}
+      update: {},
+      create: {}
    });
 
    useEffect(() => {
@@ -129,6 +130,19 @@ export function Battle({ text }) {
    }
 
    function sendMove() {
+      moveData.shots = [
+         {
+            shooterId: "ship-6-0-0",
+            cannonId: "cannon-0",
+            data: {
+               target: {
+                  x: 0,
+                  y: 14
+               }
+            }
+         }
+      ];
+      console.log(moveData);
       socket.emit("BattleMove", moveData);
       setMoveData(prev => {
          const newUpdate = { ...prev.update };
@@ -147,7 +161,7 @@ export function Battle({ text }) {
          {isBattleData ? (
             <div className="battle-continer">
                <ActionBarLayout isPlayerTurn={isPlayerTurn} moveData={moveData} setMoveData={setMoveData} playerId={playerData.id} currentCastomnShipData={ships[currentCastomnShip]} />
-               <BattleMapLayout lastKnownEnemyShips={lastKnownEnemyShips} playerteamIndex={playerteamIndex} setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
+               <BattleMapLayout currentCastomnShip={currentCastomnShip} lastKnownEnemyShips={lastKnownEnemyShips} playerteamIndex={playerteamIndex} setCurrentCastomnShip={setCurrentCastomnShip} map={map} ships={ships} moveData={moveData} />
                <RightBarLayout sendMove={sendMove} />
             </div>
          ) : ""}

@@ -11,6 +11,15 @@ export function ActionBarLayout({ isPlayerTurn, moveData, setMoveData, playerId,
                <p>Team: {currentCastomnShipData.teamIndex}</p>
             </div>
          ) : ""}
+         { currentCastomnShipData?.weapons ? (
+            <div>
+               { Object.values(currentCastomnShipData?.weapons).map((weapon) => (
+                  <div key={weapon.id}>
+                     <h4>{weapon.name}</h4>
+                  </div>
+               ))}
+            </div>
+         ) : ""}
          {currentCastomnShipData?.ownerId === playerId && (
             <ShipControl
                isPlayerTurn={isPlayerTurn}

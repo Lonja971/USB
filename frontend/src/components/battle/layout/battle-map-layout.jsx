@@ -4,14 +4,15 @@ import { PredictedShip } from "../entities/predicted-ship";
 import { predictShipMovement } from "../../../utils/battle";
 import { LastSpottedShip } from "../entities/last-spotted-ship";
 
-export function BattleMapLayout({ lastKnownEnemyShips, setCurrentCastomnShip, map, ships, moveData, playerteamIndex }) {
+export function BattleMapLayout({ currentCastomnShip, lastKnownEnemyShips, setCurrentCastomnShip, map, ships, moveData, playerteamIndex }) {
    const cellSize = 20;
+   console.log(currentCastomnShip);
 
    return (
       <div className="battle__map" style={{ width: map.size.x * cellSize, height: map.size.y * cellSize }}>
          <GridLayour width={map.size.x} height={map.size.y} cellSize={cellSize} />
          {Object.values(ships).map((ship) => (
-            <Ship setCurrentCastomnShip={setCurrentCastomnShip} key={ship.id} ship={ship} cellSize={cellSize} />
+            <Ship currentCastomnShip={currentCastomnShip} setCurrentCastomnShip={setCurrentCastomnShip} key={ship.id} ship={ship} cellSize={cellSize} />
          ))}
          {Object.values(lastKnownEnemyShips).map((lastKnownEnemyShip) => (
             <LastSpottedShip key={lastKnownEnemyShip.id} ship={lastKnownEnemyShip} cellSize={cellSize} />

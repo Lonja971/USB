@@ -9,7 +9,7 @@ export function serializeShip(ship, viewerId, viewerTeamIndex) {
       centerPosition: ship.centerPosition,
       directionKey: ship.directionKey,
       direction: ship.direction,
-      health: ship.health,
+      health: ship.health
    };
 
    if (ship.teamIndex === viewerTeamIndex) {
@@ -20,12 +20,15 @@ export function serializeShip(ship, viewerId, viewerTeamIndex) {
          currentSpeedIndex: ship.currentSpeedIndex,
          rudder: ship.rudder,
          availableSpeeds: ship.availableSpeeds,
+         detectionRadius: ship.detectionRadius
       });
 
-      //if (ship.ownerId === viewerId) {
-      //   Object.assign(data, {
-      //   });
-      //}
+      if (ship.ownerId === viewerId) {
+         Object.assign(data, {
+            maneuverPoints: ship.maneuverPoints,
+            maneuverCosts: ship.maneuverCosts
+         });
+      }
    }
 
    return data;

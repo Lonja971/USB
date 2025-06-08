@@ -1,6 +1,7 @@
 import { PlayerRepo } from "../../inMemoryRepos/player.js";
 import { SpatialIndex } from "../map/SpatialIndex.js";
 import { shipConfigs } from "../../config/game/shipConfigs.js";
+import { projectileTypes } from "../../config/game/projectileTypes.js";
 import { serializeEntity } from "../../services/index.js";
 
 export class BattleState {
@@ -11,9 +12,11 @@ export class BattleState {
       this.spatialIndex = new SpatialIndex();
       this.teams = teams;
       this.phase = "waiting";
+      this.logic = null;
 
       this.entities = {};
-      this.projectiles = [];
+      this.projectileIdCounter = 0;
+      this.projectiles = new Map();
 
       this.currentTurn = 0;
       this.playersWhoMoved = [];
@@ -25,13 +28,22 @@ export class BattleState {
       });
    }
    
+   updateSpatialProjectile(projectileId, projectile){
+      this.spatialIndex.add(projectile.position.x, projectile.position.y, projectileId);
+   }
+
    updateSpatialShipSegments(ship) {
       for (const segment of ship.getSegments()) {
          this.spatialIndex.add(segment.x, segment.y, ship.id);
       }
    }
 
-   updateSpotting(teamIndex) {
+   tick(teamIndex) {
+      this._updateSpotting(teamIndex);
+      this._updateProjectiles(teamIndex);
+   }
+
+   _updateSpotting(teamIndex) {
       for (let teamId = 0; teamId < this.teams.length; teamId++) {
          if (teamIndex !== "all" && teamId !== teamIndex) continue;
 
@@ -46,6 +58,24 @@ export class BattleState {
             }
          }
       };
+   }
+
+   _updateProjectiles(teamIndex) {
+      for (const [projectileId, projectile] of this.projectiles.entries()) {
+         if (teamIndex !== "all" && projectile.teamIndex !== teamIndex) continue;
+         console.log("оновлюємо снаряд: " + projectileId);
+         projectile.tick();
+
+         if (projectile.status.isAttacking) {
+            this.logic.handleHit(projectileId);
+         }
+
+         if (projectile.status.isDestroyed) {
+            this.removeProjectile(projectileId);
+         }else {
+            this.updateSpatialProjectile(projectileId, projectile);
+         }
+      }
    }
 
    getTeamEntities(desiredTeamIndex){
@@ -139,6 +169,29 @@ export class BattleState {
       team.spottedEntities[entityId] = {
          duration: spotDuration
       }
+   }
+
+   createProjectile(projectileData) {
+      console.log("Ствоюємо снаряд в State");
+      if (!projectileData.type) return;
+      console.log("Ствоюємо снаряд в State");
+      const projectileId = `${projectileData.type}-${projectileData.ownerId ? projectileData.ownerId : "unc"}-${this.projectileIdCounter++}`;
+      projectileData.id = projectileId;
+
+      const projectile = new projectileTypes[projectileData.type](projectileData);
+      this.projectiles.set(projectileId, projectile);
+
+      console.log("Створено снаряд:");
+      console.log(projectile);
+      return projectile;
+   }
+
+   removeProjectile(projectileId) {
+      if (!this.projectiles.has(projectileId)) return;
+
+      this.projectiles.delete(projectileId);
+      this.spatialIndex.clearByEntityId(projectileId);
+      console.log("Снаряд існує в projectiles:", this.projectiles.has(projectileId));
    }
 
    spawnShipsForTeams(teams, config) {

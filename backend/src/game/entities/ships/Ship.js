@@ -34,7 +34,7 @@ export class Ship {
 
       this.defaultSpottingDuration = 4;
 
-      this.weapons = [];
+      this.weapons = {};
       this.modules = [];
 
       if (Array.isArray(configModules)) {
@@ -51,16 +51,22 @@ export class Ship {
          });
       }
       if (Array.isArray(configWeapons)) {
-         configWeapons.forEach(({ type, classRef, positionOffset, options = null }) => {
+         configWeapons.forEach(({ type, name, classRef, positionOffset, options = null }, index) => {
+            const weaponId = `${type}-${index}`;
             const weaponInstance = new classRef({
                data: {
+                  id: weaponId,
+                  name,
                   type,
                   entityId: this.id,
+                  teamIndex: this.teamIndex,
+                  ownerId: this.ownerId,
                   positionOffset,
                },
                ...(options ?? {})
             });
-            this.weapons.push(weaponInstance);
+
+            this.weapons[weaponId] = weaponInstance;
          });
       }
    }
@@ -84,21 +90,6 @@ export class Ship {
       }
 
       return segments;
-   }
-
-   getAbsoluteSegmentPosition(offset) {
-      const dir = this.direction;
-      return {
-         x: this.centerPosition.x + dir.dx * offset,
-         y: this.centerPosition.y + dir.dy * offset
-      };
-   }
-
-   getLocatorPosition() {
-      const locator = this.modules.find(mod => mod.type === "locator");
-      const offset = locator?.positionOffset ?? this.coreIndex;
-
-      return this.getAbsoluteSegmentPosition(offset);
    }
 
    getCurrentSpeed() {
@@ -138,6 +129,14 @@ export class Ship {
 
       this.centerPosition.x += -dx * speed;
       this.centerPosition.y += -dy * speed;
+   }
+
+   applyDamage(damageAmount) {
+      this.health -= damageAmount;
+      console.log(`Корабель ${this.id} отримав дамаг, тепер: ${this.health}`);
+      if (this.health <= 0){
+         console.log(`${this.id} знищений`);
+      }
    }
 
    clone() {

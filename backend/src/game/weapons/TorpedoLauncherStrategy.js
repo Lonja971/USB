@@ -1,11 +1,12 @@
 import { WeaponStrategy } from "./WeaponStrategy.js";
 
-export class TorpedoStrategy extends WeaponStrategy {
+export class TorpedoLauncherStrategy extends WeaponStrategy {
    constructor({ data, entityRef }) {
       super({
          ...data,
          entityRef
       });
+      this.name = "Торпедний апарат";
       this.reloadMax = 12;
       this.reloadCurrent = 0;
    }

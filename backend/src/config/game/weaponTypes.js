@@ -1,7 +1,7 @@
 import { CannonStrategy } from "../../game/weapons/CannonStrategy.js";
-import { TorpedoStrategy } from "../../game/weapons/TorpedoStrategy.js";
+import { TorpedoLauncherStrategy } from "../../game/weapons/TorpedoLauncherStrategy.js";
 
 export const weaponTypes = {
    cannon: CannonStrategy,
-   torpedo: TorpedoStrategy,
+   TorpedoLauncher: TorpedoLauncherStrategy
 };

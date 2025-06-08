@@ -37,14 +37,17 @@ export const shipConfigs = {
       detectionRadius: 10,
       modules: [],
       availableSpeeds : [-1, 0, 1, 2],
-      maneuverPoints: 5,
+      maneuverPoints: 3,
       maneuverCosts: {
          moveForward: 1,
          turn: 2
       },
       speedsNullPointIndex: 1,
       weapons: [
-         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: -1 }
+         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: 1 },
+         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: 2 },
+         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: 4 },
+         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: 5 },
       ]
    },
    Cruiser: {
@@ -63,7 +66,7 @@ export const shipConfigs = {
       speedsNullPointIndex: 1,
       modules: [],
       weapons: [
-         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: -1 }
+         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: 1 },
       ]
    },
    Destroyer: {
@@ -82,7 +85,7 @@ export const shipConfigs = {
       },
       modules: [],
       weapons: [
-         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: -1 }
+         { type: "cannon", classRef: weaponTypes.cannon, positionOffset: 1 },
       ]
    },
    Submarine: {
@@ -101,7 +104,7 @@ export const shipConfigs = {
       },
       modules: [],
       weapons: [
-         { type: "torpedo", classRef: weaponTypes.torpedo, positionOffset: -1 }
+         { type: "TorpedoLauncher", classRef: weaponTypes.TorpedoLauncher, positionOffset: 1 },
       ]
    },
 };

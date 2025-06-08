@@ -1,4 +1,5 @@
 import { getPlayerTeamIndex } from "../../utils/battles/battle.js";
+import { isWithinRadius } from "../utils/helpers.js";
 
 export class BattleLogic {
    constructor({ state }) {
@@ -6,27 +7,21 @@ export class BattleLogic {
    }
 
    makeMove(playerId, moveData) {
-      const playerTeamIndex = getPlayerTeamIndex(playerId, this.state.teams);
+      const playerTeamIndex = this._getPlayerTeamIndex(playerId);
+      console.log(this.state.spatialIndex.cells);
 
-      if (playerTeamIndex !== this.state.currentTurn) {
+      if (!this._isPlayerTurn(playerTeamIndex)) {
          return { success: false, message: 'Not your turn!' };
       }
-      if (this.state.playersWhoMoved.includes(playerId)) {
+      if (this._hasPlayerMoved(playerId)) {
          return { success: false, message: 'You already moved!' };
       }
 
-      if (moveData.update){
-         Object.entries(moveData.update).forEach(([key, data]) => {
-            const entity = this.state.entities[key];
-            if (!entity) return;
-            if (entity.ownerId !== playerId) return;
-
-            if (entity.type === "ship") {
-               entity.updateFromPlayer(data);
-            }else{
-               return;
-            }
-         });
+      if (moveData.update) {
+         this._applyUpdates(playerId, moveData.update);
+      }
+      if (moveData.shots) {
+         this._applyShoots(playerId, moveData.shots);
       }
 
       this.state.playersWhoMoved.push(playerId);
@@ -35,38 +30,94 @@ export class BattleLogic {
       return { success: true, gameOver: false };
    }
 
-   checkAndAdvanceTurn(playerTeamIndex) {
-      if (this.state.playersWhoMoved.length === this.state.teams[playerTeamIndex].length){
-         this.processTurn(playerTeamIndex);
+   _getPlayerTeamIndex(playerId) {
+      return getPlayerTeamIndex(playerId, this.state.teams);
+   }
 
-         const totalTeams = this.state.teams.length;
-         let nextTurn = (this.state.currentTurn + 1) % totalTeams;
-         while (!this.state.teams[nextTurn] || this.state.teams[nextTurn].length === 0) {
-            nextTurn = (nextTurn + 1) % totalTeams;
+   _isPlayerTurn(teamIndex) {
+      return teamIndex === this.state.currentTurn;
+   }
+
+   _hasPlayerMoved(playerId) {
+      return this.state.playersWhoMoved.includes(playerId);
+   }
+
+   _applyUpdates(playerId, updates) {
+      Object.entries(updates).forEach(([key, data]) => {
+         const entity = this.state.entities[key];
+         if (!entity) return;
+         if (entity.ownerId !== playerId) return;
+
+         if (entity.type === "ship") {
+            entity.updateFromPlayer(data);
          }
-         this.state.currentTurn = nextTurn;
+      });
+   }
+
+   _applyShoots(playerId, shots) {
+      shots.forEach(shot => {
+         let shooter = this.state.entities[shot.shooterId];
+         if (!shooter || playerId !== shooter.ownerId) return;
+
+         let weapon = shooter.weapons[shot.cannonId];
+         if (!weapon) return;
+
+         weapon.shoot({
+            data: shot.data,
+            createProjectile: this.state.createProjectile.bind(this.state),
+            getCoordByEntityPointIndex: this.state.spatialIndex.getCoordByEntityPointIndex.bind(this.state.spatialIndex),
+            isInsideMap: this.state.map.isInside.bind(this.state.map)
+         });
+      });
+   }
+
+   checkAndAdvanceTurn(playerTeamIndex) {
+      if (this.state.playersWhoMoved.length === this.state.teams[playerTeamIndex].length) {
+         this.tick(playerTeamIndex);
+         this._setNextTurn();
          this.state.playersWhoMoved = [];
       }
    }
 
-   processTurn(teamIndex = "all") {
-      this.state.updateSpotting(teamIndex);
+   _setNextTurn() {
+      const totalTeams = this.state.teams.length;
+      let nextTurn = (this.state.currentTurn + 1) % totalTeams;
 
+      while (!this.state.teams[nextTurn] || this.state.teams[nextTurn].length === 0) {
+         nextTurn = (nextTurn + 1) % totalTeams;
+      }
+
+      this.state.currentTurn = nextTurn;
+   }
+
+   tick(teamIndex = "all") {
       Object.entries(this.state.entities).forEach(([entityId, entity]) => {
          if (entity.teamIndex !== teamIndex && teamIndex !== "all") return;
 
-         if (entity.type === "ship"){
+         if (entity.type === "ship") {
             this.processShipTurn(entityId, entity);
-            
-            for (const module of entity.modules || []) {
-               if (module.type === "locator") {
-                  module.tick(entity, this.state.entity, this.state.setSpottedEntity.bind(this.state));
-               }
-            }
+            this._processEntityWeapons(entity);
+            this._processEntityModules(entity);
          }
 
          this.checkIfEnteredEnemyDetectionZone(entity);
       });
+
+      this.state.tick(teamIndex);
+   }
+
+   _processEntityWeapons(entity) {
+      for (const weapon of  Object.values(entity.weapons || {})) {   
+         weapon.tick();
+      }
+   }
+
+   _processEntityModules(entity) {
+      for (const module of entity.modules || []) {
+         if (module.type === "locator") {
+            module.tick(ship, this.state.entities, this.state.setSpottedEntity.bind(this.state));
+         }
+      }
    }
 
    processShipTurn(shipId, ship) {
@@ -217,17 +268,43 @@ export class BattleLogic {
          if (!enemyCells || enemyEntity.coreIndex >= enemyCells.length) continue;
 
          const enemyCoreCoord = enemyCells[enemyEntity.coreIndex];
-         const dx = ourCoreCoord.x - enemyCoreCoord.x;
-         const dy = ourCoreCoord.y - enemyCoreCoord.y;
-         const distSq = dx * dx + dy * dy;
 
-         if (distSq <= enemyEntity.detectionRadius ** 2) {
+         if (isWithinRadius(
+               ourCoreCoord.x,
+               ourCoreCoord.y,
+               enemyCoreCoord.x,
+               enemyCoreCoord.y,
+               enemyEntity.detectionRadius
+            )) {
             this.state.setSpottedEntity(
                enemyId,
                enemyEntity.defaultSpottingDuration,
                ourEntity.teamIndex
             );
          }
+      }
+   }
+
+   handleHit(projectileId) {
+      console.log("Статус атакуємо у " + projectileId + ", перевіряємо...");
+      const projectile = this.state.projectiles.get(projectileId);
+      if (!projectile) return;
+
+      const coordItems = this.state.spatialIndex.get(projectile.position.x, projectile.position.y);
+      if (!coordItems) return;
+      console.log(`Всі елементи в цьому квадраті:`);
+      console.log(coordItems);
+      console.log(projectile.position.x, projectile.position.y);
+
+      coordItems.forEach(itemId => {
+         console.log(`${itemId} попався на атаку!`);
+         const damagedEntity = this.state.entities[itemId];
+         if (!damagedEntity) return;
+
+         damagedEntity.applyDamage ? damagedEntity.applyDamage(projectile.damage) : "";
+      });
+      if (projectile.destroyingOnImpact) {
+         projectile.status.isDestroyed = true;
       }
    }
 }
