@@ -130,18 +130,18 @@ export function Battle({ text }) {
    }
 
    function sendMove() {
-      moveData.shots = [
-         {
-            shooterId: "ship-6-0-0",
-            cannonId: "cannon-0",
-            data: {
-               target: {
-                  x: 0,
-                  y: 14
-               }
-            }
-         }
-      ];
+      //moveData.shots = [
+      //   {
+      //      shooterId: "ship-6-0-0",
+      //      cannonId: "cannon-0",
+      //      data: {
+      //         target: {
+      //            x: 0,
+      //            y: 14
+      //         }
+      //      }
+      //   }
+      //];
       console.log(moveData);
       socket.emit("BattleMove", moveData);
       setMoveData(prev => {

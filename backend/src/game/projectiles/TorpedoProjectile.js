@@ -5,5 +5,11 @@ export class TorpedoProjectile extends Projectile{
       super({
          ...data
       })
+
+      this.damage = 2;
+      this.status = "attacking";
+
+      this.speed = 2;
+      this.direction = data.direction;
    }
 }

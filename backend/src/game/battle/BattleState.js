@@ -12,7 +12,6 @@ export class BattleState {
       this.spatialIndex = new SpatialIndex();
       this.teams = teams;
       this.phase = "waiting";
-      this.logic = null;
 
       this.entities = {};
       this.projectileIdCounter = 0;
@@ -29,18 +28,17 @@ export class BattleState {
    }
    
    updateSpatialProjectile(projectileId, projectile){
-      this.spatialIndex.add(projectile.position.x, projectile.position.y, projectileId);
+      this.spatialIndex.add(projectile.position.x, projectile.position.y, projectileId, projectile.classType);
    }
 
    updateSpatialShipSegments(ship) {
       for (const segment of ship.getSegments()) {
-         this.spatialIndex.add(segment.x, segment.y, ship.id);
+         this.spatialIndex.add(segment.x, segment.y, ship.id, ship.classType);
       }
    }
 
    tick(teamIndex) {
       this._updateSpotting(teamIndex);
-      this._updateProjectiles(teamIndex);
    }
 
    _updateSpotting(teamIndex) {
@@ -58,24 +56,6 @@ export class BattleState {
             }
          }
       };
-   }
-
-   _updateProjectiles(teamIndex) {
-      for (const [projectileId, projectile] of this.projectiles.entries()) {
-         if (teamIndex !== "all" && projectile.teamIndex !== teamIndex) continue;
-         console.log("оновлюємо снаряд: " + projectileId);
-         projectile.tick();
-
-         if (projectile.status.isAttacking) {
-            this.logic.handleHit(projectileId);
-         }
-
-         if (projectile.status.isDestroyed) {
-            this.removeProjectile(projectileId);
-         }else {
-            this.updateSpatialProjectile(projectileId, projectile);
-         }
-      }
    }
 
    getTeamEntities(desiredTeamIndex){
@@ -217,6 +197,7 @@ export class BattleState {
 
                   const tempShip = new shipConfig.classRef({
                      id: shipId,
+                     type: shipConfig.type,
                      name: shipConfig.name,
                      ownerId: player.id,
                      teamIndex,
@@ -255,7 +236,7 @@ export class BattleState {
             const segments = ship.getSegments();
             const canPlace = segments.every(seg =>
                this.map.isInside(seg.x, seg.y) &&
-               !this.spatialIndex.isOccupied(seg.x, seg.y)
+               !this.spatialIndex.isOccupied(seg.x, seg.y, "ship")
             );
             if (canPlace) return { x, y };
          }

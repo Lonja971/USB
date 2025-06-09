@@ -10,7 +10,7 @@ export class CannonStrategy extends WeaponStrategy {
       this.radius = 20;
       this.reloadMax = 1;
 
-      this.projectileType = "cannonBallProjectile";
+      this.projectileType = "CannonballProjectile";
       this.projectileSpeed = 15;
    }
 
@@ -18,15 +18,15 @@ export class CannonStrategy extends WeaponStrategy {
       if (this.reloadCurrent > 0) return;
       if (!data.target) return;
       if (!isInsideMap(data.target.x, data.target.y)) return;
-      
+
       const weaponCoord = getCoordByEntityPointIndex(this.entityId, this.positionOffset);
       if (!weaponCoord) return;
-      
+
       const isInRadius = isWithinRadius(weaponCoord.x, weaponCoord.y, data.target.x, data.target.y, this.radius);
       if (!isInRadius) return;
 
       console.log("СТВОРЮЄМО СНАРЯД");
-      
+
       createProjectile({
          type: this.projectileType,
          position: {

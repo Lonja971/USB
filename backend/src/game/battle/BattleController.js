@@ -8,7 +8,6 @@ export class BattleController {
       this.messenger = new BattleMessenger(io, id);
       this.state = new BattleState({ id, config, teams, map });
       this.logic = new BattleLogic({ state: this.state});
-      this.state.logic = this.logic;
       this.timer = new BattleTimer(1000);
 
       this.timer.start(15, "waiting", this.onTick.bind(this), this.onTimeout.bind(this));

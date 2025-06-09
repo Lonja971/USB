@@ -2,7 +2,7 @@ import { DIRECTION, DIRECTION_KEYS } from "../../../config/game/shipConfigs.js";
 
 export class Ship {
    constructor({
-      id, name, ownerId, teamIndex, x = null, y = null,
+      id, name, ownerId, teamIndex, x = null, y = null, type,
       speedsNullPointIndex, health, length,
       availableSpeeds, maneuverPoints, maneuverCosts,
       coreIndex, detectionRadius, direction,
@@ -10,7 +10,8 @@ export class Ship {
    }) {
       this.id = id;
       this.name = name;
-      this.type = "ship";
+      this.classType = "ship";
+      this.type = type;
       this.ownerId = ownerId;
       this.teamIndex = teamIndex;
 
@@ -151,7 +152,7 @@ export class Ship {
       });
       newShip.centerPosition = { ...this.centerPosition };
       newShip.directionKey = this.directionKey,
-         newShip.currentSpeedIndex = this.currentSpeedIndex;
+      newShip.currentSpeedIndex = this.currentSpeedIndex;
       newShip.rudder = this.rudder;
       newShip.direction = this.direction;
 

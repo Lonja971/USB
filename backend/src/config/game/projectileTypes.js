@@ -1,7 +1,7 @@
-import { CannonBallProjectile } from "../../game/projectiles/CannonBallProjectile.js";
+import { CannonballProjectile } from "../../game/projectiles/CannonballProjectile.js";
 import { TorpedoProjectile } from "../../game/projectiles/TorpedoProjectile.js";
 
 export const projectileTypes = {
-   cannonBallProjectile: CannonBallProjectile,
+   CannonballProjectile: CannonballProjectile,
    torpedoProjectile: TorpedoProjectile
 }

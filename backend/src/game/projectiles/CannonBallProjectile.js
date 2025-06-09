@@ -1,7 +1,7 @@
 import { Projectile } from "./Projectile.js";
 import { calculateDistance } from "../utils/helpers.js";
 
-export class CannonBallProjectile extends Projectile{
+export class CannonballProjectile extends Projectile{
    constructor(data) {
       super({
          ...data
@@ -22,17 +22,24 @@ export class CannonBallProjectile extends Projectile{
       return Math.ceil(this.distance / 10);
    }
 
-   tick() {
+   tick({ spatialIndex, applyDamageToEntities, removeProjectile }) {
       console.log(`Оновлюємо снаряд в tick: ${this.id}`);
       console.log(`Початково: ${this.ticksPassed}`);
-      this.position = {
-         x: this.target.x,
-         y: this.target.y,
+      if (this.status == "explosion") {
+         removeProjectile(this.id);
+         return;
       }
-      
+
       if (this.ticksPassed >= this.flightTime) {
+         this.status = "explosion";
          console.log(`Атакуємо!`);
-         this.status.isAttacking = true;
+         const damagedTargets = spatialIndex.get(this.target.x, this.target.y, "ship");
+         console.log("Попали під атаку:");
+         console.log(damagedTargets);
+         if (damagedTargets) {
+            applyDamageToEntities(damagedTargets, this.damage, this.teamIndex);
+         }
+
       }else{
          console.log(`Просто збільшуємо...`);
          this.ticksPassed++;

@@ -30,6 +30,7 @@ export const DIRECTION_KEYS = [
 export const shipConfigs = {
    Battleship: {
       name: "Лінкор",
+      type: "BattleShip",
       classRef: Battleship,
       health: 5,
       length: 5,
@@ -37,7 +38,7 @@ export const shipConfigs = {
       detectionRadius: 10,
       modules: [],
       availableSpeeds : [-1, 0, 1, 2],
-      maneuverPoints: 3,
+      maneuverPoints: 5,
       maneuverCosts: {
          moveForward: 1,
          turn: 2
@@ -52,6 +53,7 @@ export const shipConfigs = {
    },
    Cruiser: {
       name: "Крейсер",
+      type: "Cruiser",
       classRef: Cruiser,
       health: 3,
       length: 4,
@@ -71,6 +73,7 @@ export const shipConfigs = {
    },
    Destroyer: {
       name: "Есмінець",
+      type: "Destroyer",
       classRef: Destroyer,
       health: 4,
       length: 3,
@@ -90,6 +93,7 @@ export const shipConfigs = {
    },
    Submarine: {
       name: "Підводний човен",
+      type: "Submarine",
       classRef: Submarine,
       health: 3,
       length: 3,

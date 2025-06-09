@@ -5,6 +5,6 @@ const serializers = {
 };
 
 export function serializeEntity(entity, viewerId, viewerTeamIndex) {
-   const fn = serializers[entity.type];
+   const fn = serializers[entity.classType];
    return fn ? fn(entity, viewerId, viewerTeamIndex) : null;
 }

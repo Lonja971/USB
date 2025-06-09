@@ -2,6 +2,7 @@ export function serializeShip(ship, viewerId, viewerTeamIndex) {
    const data = {
       id: ship.id,
       name: ship.name,
+      classType: ship.calssType,
       type: ship.type,
       ownerId: ship.ownerId,
       teamIndex: ship.teamIndex,

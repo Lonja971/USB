@@ -48,7 +48,7 @@ export class BattleLogic {
          if (!entity) return;
          if (entity.ownerId !== playerId) return;
 
-         if (entity.type === "ship") {
+         if (entity.classType === "ship") {
             entity.updateFromPlayer(data);
          }
       });
@@ -91,10 +91,15 @@ export class BattleLogic {
    }
 
    tick(teamIndex = "all") {
+      console.log("Tick в логіці");
       Object.entries(this.state.entities).forEach(([entityId, entity]) => {
+         console.log(entityId);
+         console.log(entity);
          if (entity.teamIndex !== teamIndex && teamIndex !== "all") return;
+         console.log("Пройшли перевірку на команду");
 
-         if (entity.type === "ship") {
+         if (entity.classType === "ship") {
+            console.log("Це корабель: " + entity.id);
             this.processShipTurn(entityId, entity);
             this._processEntityWeapons(entity);
             this._processEntityModules(entity);
@@ -104,6 +109,7 @@ export class BattleLogic {
       });
 
       this.state.tick(teamIndex);
+      this.processProjectiles(teamIndex);
    }
 
    _processEntityWeapons(entity) {
@@ -121,28 +127,34 @@ export class BattleLogic {
    }
 
    processShipTurn(shipId, ship) {
+      console.log("Почали опрацьовувати корабель рух");
       const mapWidth = this.state.map.width;
       const mapHeight = this.state.map.height;
       const spatialIndex = this.state.spatialIndex;
-
+      
       let maneuverPoints = ship.maneuverPoints;
       const originalSpeedIndex = ship.currentSpeedIndex;
       const isStationary = originalSpeedIndex === ship.speedsNullPointIndex;
       const hasTurn = ship.rudder !== "center";
-
+      
       if (isStationary && hasTurn) return;
 
+      console.log(`🚢 processShipTurn для ${ship.id}`);
+      console.log(`Початкова швидкість: ${originalSpeedIndex}, Поворот: ${hasTurn}, Стоїть: ${isStationary}`);
+      
       const checked = new Set();
       const tryQueue = [];
-
+      
       const trySpeed = (speedIndex, applyTurn) => {
          const key = `${speedIndex}_${applyTurn}`;
          if (checked.has(key)) return;
          checked.add(key);
          tryQueue.push({ speedIndex, applyTurn });
+         console.log(`➡️ Додано в чергу: speedIndex=${speedIndex}, turn=${applyTurn}`);
       };
-
+      
       trySpeed(originalSpeedIndex, hasTurn);
+      console.log("ПРоблем початкових нема");
       
       for (let delta = 1; delta < ship.availableSpeeds.length; delta++) {
          if (originalSpeedIndex - delta >= 0)
@@ -164,6 +176,7 @@ export class BattleLogic {
       let bestAttempt = null;
 
       for (const config of tryQueue) {
+         console.log(`🧪 Пробуємо: speed=${config.speedIndex}, turn=${config.applyTurn}`);
          const result = this.attemptPlacement({
             ship,
             applyTurn: config.applyTurn,
@@ -174,6 +187,8 @@ export class BattleLogic {
             mapHeight,
          });
 
+         console.log(`Результат:`, result);
+
          if (result.success) {
             bestAttempt = result;
             break;
@@ -183,8 +198,12 @@ export class BattleLogic {
       if (bestAttempt) {
          const finalShip = bestAttempt.shipClone;
 
+         console.log("✅ Успішне переміщення");
+
          spatialIndex.clearByEntityId(shipId);
-         ship.applyTurn(ship.rudder);
+
+         ship.direction = { ...finalShip.direction };
+         ship.directionKey = finalShip.directionKey;
          ship.currentSpeedIndex = finalShip.currentSpeedIndex;
          ship.update();
          
@@ -192,6 +211,7 @@ export class BattleLogic {
          this.state.updateSpatialShipSegments(ship);
 
          maneuverPoints -= bestAttempt.costUsed;
+         console.log(`✅ Оновлено позицію: speed=${ship.currentSpeedIndex}`);
       } else {
          ship.rudder = "center";
       }
@@ -231,8 +251,13 @@ export class BattleLogic {
             };
          }
 
-         const occupants = spatialIndex.get(x, y);
-         if (occupants.size > 0 && !occupants.has(ship.id)) {
+         const allEntities = spatialIndex.get(x, y);
+         console.log("===");
+         console.log(allEntities);
+         console.log("===");;
+         const shipConflicts = allEntities.filter(e => e.type === "ship" && e.id !== ship.id);
+
+         if (shipConflicts.length > 0) {
             return {
                success: false,
                reason: "collision",
@@ -285,26 +310,29 @@ export class BattleLogic {
       }
    }
 
-   handleHit(projectileId) {
-      console.log("Статус атакуємо у " + projectileId + ", перевіряємо...");
-      const projectile = this.state.projectiles.get(projectileId);
-      if (!projectile) return;
-
-      const coordItems = this.state.spatialIndex.get(projectile.position.x, projectile.position.y);
-      if (!coordItems) return;
-      console.log(`Всі елементи в цьому квадраті:`);
-      console.log(coordItems);
-      console.log(projectile.position.x, projectile.position.y);
-
-      coordItems.forEach(itemId => {
-         console.log(`${itemId} попався на атаку!`);
-         const damagedEntity = this.state.entities[itemId];
-         if (!damagedEntity) return;
-
-         damagedEntity.applyDamage ? damagedEntity.applyDamage(projectile.damage) : "";
-      });
-      if (projectile.destroyingOnImpact) {
-         projectile.status.isDestroyed = true;
+   processProjectiles(teamIndex) {
+      for (const [projectileId, projectile] of this.state.projectiles.entries()) {
+         if (teamIndex !== "all" && projectile.teamIndex !== teamIndex) continue;
+         
+         console.log("оновлюємо снаряд: " + projectileId);
+         projectile.tick({
+            spatialIndex: this.state.spatialIndex,
+            applyDamageToEntities: this.applyDamageToEntities.bind(this),
+            updateSpatialProjectile: this.state.updateSpatialProjectile.bind(this.state),
+            removeProjectile: this.state.removeProjectile.bind(this.state)
+         });
+      }
+   }
+   
+   applyDamageToEntities(entities, damageValue=0, teamIndex = "all"){
+      for (const entity of entities) {
+         const damagedEntity = this.state.entities[entity.id];
+         if (!damagedEntity) continue;
+         if (damagedEntity.teamIndex === teamIndex && teamIndex !== "all") continue;
+         
+         if (typeof damagedEntity.applyDamage === "function") {
+            damagedEntity.applyDamage(damageValue);
+         }
       }
    }
 }
